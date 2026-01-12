@@ -47,7 +47,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 COPY ./osTicket/upload /var/www/html
 
 # If you have these files locally, make sure they are in the folder:
-# COPY php.ini /usr/local/etc/php/
+COPY php.ini /usr/local/etc/php/
 RUN chown -R www-data:www-data /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
