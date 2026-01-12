@@ -40,6 +40,9 @@ RUN pecl install apcu && docker-php-ext-enable apcu
 # Enable Apache Rewrite Module
 RUN a2enmod rewrite
 
+# Install Gettext extension
+RUN docker-php-ext-install gettext
+
 # Permissions and entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
