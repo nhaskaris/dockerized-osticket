@@ -12,26 +12,27 @@ RUN apt-get update && apt-get install -y \
     libc-client-dev \
     libkrb5-dev \
     libssl-dev \
+    libldap2-dev \
     unzip \
     git \
     cron \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure and install PHP extensions
-# Removed --with-libc-client, added --with-imap-ssl
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
     && docker-php-ext-install -j$(nproc) \
-       intl \
-       mysqli \
-       pdo_mysql \
-       gd \
-       bcmath \
-       mbstring \
-       xml \
-       zip \
-       imap \
-       opcache
+        intl \
+        mysqli \
+        pdo_mysql \
+        gd \
+        bcmath \
+        mbstring \
+        xml \
+        zip \
+        imap \
+        ldap \
+        opcache
 
 # Install APCu
 RUN pecl install apcu && docker-php-ext-enable apcu
@@ -47,7 +48,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 COPY ./osTicket/upload /var/www/html
 
 # If you have these files locally, make sure they are in the folder:
-# COPY php.ini /usr/local/etc/php/
+COPY php.ini /usr/local/etc/php/
 RUN chown -R www-data:www-data /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
