@@ -40,6 +40,9 @@ RUN pecl install apcu && docker-php-ext-enable apcu
 # Enable Apache Rewrite Module
 RUN a2enmod rewrite
 
+# Configure Apache to allow .htaccess overrides
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/{s/AllowOverride None/AllowOverride All/}' /etc/apache2/apache2.conf
+
 # Install Gettext extension
 RUN docker-php-ext-install gettext
 
