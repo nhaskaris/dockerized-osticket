@@ -1,0 +1,20 @@
+# osTicket helpdesk software - Community Edition
+# http://osticket.com
+
+# Enable RewriteEngine
+RewriteEngine On
+RewriteBase /
+
+# Prevent direct access to internal pages/files
+RewriteRule ^(\.well-known|include|config|api|setup|scp)(/|$) - [L]
+
+# Rewrite URLs for rest-like access to API endpoints
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(tickets|tasks|users|orgs|departments|users/me)/?(.*)$ /api/http.php?action=$1&$2 [QSA,L]
+RewriteRule ^api/(.*)$ /api/http.php [QSA,L]
+
+# Pages rewrites
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_-]+)/?$ /pages/$1.php [QSA,L]
