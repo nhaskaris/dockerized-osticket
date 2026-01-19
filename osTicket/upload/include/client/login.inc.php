@@ -43,17 +43,17 @@ if ($content) {
         </form>
     </div>
 
-    <div class="auth-actions">
-        <?php if ($suggest_pwreset) { ?>
+    <?php if ($suggest_pwreset) { ?>
+        <div style="text-align: center; margin-top: 1.5rem;">
             <a class="link-muted" href="pwreset.php"><?php echo __('Forgot Password?'); ?></a>
+        </div>
+    <?php } ?>
+
+    <div class="auth-footer-links">
+        <?php if ($cfg && $cfg->isClientRegistrationEnabled()) { ?>
+            <a href="account.php?do=create"><?php echo __("Don't have an account? Sign up"); ?></a>
         <?php } ?>
         
-        <?php if ($cfg && $cfg->isClientRegistrationEnabled()) { ?>
-            <a class="link-muted" href="account.php?do=create"><?php echo __("Don't have an account? Sign up"); ?></a>
-        <?php } ?>
-    </div>
-
-    <div class="agent-link">
         <a href="<?php echo ROOT_PATH; ?>scp/"><?php echo __('Are you an Agent?'); ?></a>
     </div>
 </div>

@@ -42,9 +42,6 @@ if (@$user && is_object($user) && $user->getTicketId())
 elseif ($thisclient && isset($_GET['id']) && is_numeric($_GET['t']))
     Http::redirect('tickets.php?id='.$_GET['id']);
 
-Http::redirect('login.php');
-exit;
-
 $nav = new UserNav();
 $nav->setActiveNav('status');
 

@@ -76,6 +76,8 @@ if (osTicket::is_ie())
 
     <?php if (strpos($_SERVER['SCRIPT_NAME'], 'login.php') !== false) { ?>
         <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/auth.css">
+    <?php } elseif (strpos($_SERVER['SCRIPT_NAME'], 'view.php') !== false) { ?>
+        <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/access.css">
     <?php } ?>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/flags.css?53339df"/>
 

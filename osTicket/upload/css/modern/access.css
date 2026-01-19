@@ -1,0 +1,82 @@
+/* access.css - Styling for the ticket access link page */
+body {
+    background: #f8fafc;
+}
+
+#access-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-height) - var(--footer-height, 100px));
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.form-header-main {
+    margin-bottom: 2rem;
+}
+
+.form-header-main h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.form-header-main p {
+    color: #718096;
+    font-size: 1.1rem;
+}
+
+.access-card {
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05), 0 4px 10px rgba(0,0,0,0.02);
+    text-align: left;
+}
+
+.input-group {
+    margin-bottom: 1.25rem;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 73, 118, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #003a5c;
+}
