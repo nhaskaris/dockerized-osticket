@@ -150,6 +150,10 @@ class Config {
     function items() {
         return ConfigItem::items($this->section, $this->section_column);
     }
+
+    function updateSetting($name, $value) {
+        return $this->update($name, $value);
+    }
 }
 
 class ConfigItem
@@ -258,6 +262,9 @@ class OsticketConfig extends Config {
         'files_req_auth' => 1,
         'force_https' => '',
         'allow_external_images' => 0,
+        'header_color' => '#004976',
+        'footer_color' => '#004976',
+        'landing_image_url' => '',
     );
 
     function __construct($section=null) {
@@ -1279,6 +1286,9 @@ class OsticketConfig extends Config {
         $f['daydatetime_format']=array('type'=>'string',   'required'=>1, 'error'=>__('Day, Datetime format is required'));
         $f['default_timezone']=array('type'=>'string',   'required'=>1, 'error'=>__('Default Timezone is required'));
         $f['system_language']=array('type'=>'string',   'required'=>1, 'error'=>__('A primary system language is required'));
+        $f['header_color']=array('type'=>'string',   'required'=>0, 'error'=>__('Header color is required'));
+        $f['footer_color']=array('type'=>'string',   'required'=>0, 'error'=>__('Footer color is required'));
+        $f['landing_image_url']=array('type'=>'string',   'required'=>0, 'error'=>__('Landing image URL is required'));
 
         $vars = Format::htmlchars($vars, true);
 
@@ -1348,6 +1358,9 @@ class OsticketConfig extends Config {
             'embedded_domain_whitelist' => Format::sanitize($vars['embedded_domain_whitelist']),
             'acl' => Format::sanitize($vars['acl']),
             'acl_backend' => Format::sanitize((int) $vars['acl_backend']) ?: 0,
+            'header_color' => $vars['header_color'],
+            'footer_color' => $vars['footer_color'],
+            'landing_image_url' => $vars['landing_image_url'],
         ));
     }
 

@@ -38,7 +38,7 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
                     if ($field->isRequiredForUsers()) echo 'required'; ?>">
                 <?php echo Format::htmlchars($field->getLocal('label')); ?>
             <?php if ($field->isRequiredForUsers() &&
-                    ($field->isEditableToUsers() || $isCreate)) { ?>
+                    ($field->isEditableToUsers() || $isCreate) && $_POST) { ?>
                 <span class="error">*</span>
             <?php }
             ?></span><?php

@@ -191,6 +191,31 @@ $gmtime = Misc::gmtime();
                 </em>
             </th>
         </tr>
+        <tr>
+        <th colspan="2"><em><b><?php echo __('Theme Branding'); ?></b>: <?php echo __('Custom colors for the header and footer.'); ?></em></th>
+        </tr>
+        <tr>
+            <td width="180"><?php echo __('Header Color'); ?>:</td>
+            <td>
+                <input type="color" name="header_color" value="<?php echo $config['header_color']; ?>">
+            </td>
+        </tr>
+        <tr>
+            <td width="180"><?php echo __('Footer Color'); ?>:</td>
+            <td>
+                <input type="color" name="footer_color" value="<?php echo $config['footer_color']; ?>">
+            </td>
+        </tr>
+        <tr>
+            <td width="180"><?php echo __('Landing Image URL'); ?>:</td>
+            <td>
+                <input type="text" size="60" name="landing_image_url" 
+                    value="<?php echo $config['landing_image_url']; ?>" 
+                    placeholder="">
+                <br>
+                <em><?php echo __('Full URL for the image displayed on the homepage.'); ?></em>
+            </td>
+        </tr>
 <?php if (extension_loaded('intl')) { ?>
         <tr><td width="220" class="required"><?php echo __('Default Locale');?>:</td>
             <td>

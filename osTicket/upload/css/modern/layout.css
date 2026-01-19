@@ -1,0 +1,158 @@
+/* layout.css - Header, Nav, and Global Layout */
+#header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    box-sizing: border-box;
+}
+
+#logo img {
+    height: 56px;
+    display: block;
+}
+
+#main-nav ul { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.9rem; 
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#main-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 0.75rem;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+#main-nav a:hover { background: rgba(255,255,255,0.1); }
+#main-nav a.active { background: rgba(255,255,255,0.2); font-weight: 700; }
+
+/* Language Flags */
+#main-nav li.lang a {
+    padding: 0 !important;
+    width: 16px !important;
+    height: 12px !important;
+    display: block !important;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.flag {
+    width: 16px !important;
+    height: 12px !important;
+    display: block !important;
+    background: url(../images/flags.png) no-repeat;
+}
+
+#banner {
+    background-color: var(--banner-bg);
+    color: var(--banner-text-color);
+    height: var(--banner-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#content {
+    width: var(--page-width);
+    max-width: 95%;
+    margin: 2rem auto;
+}
+
+/* footer.css logic inside layout.css */
+#footer {
+    flex-shrink: 0; /* Prevents footer from squishing */
+    background: var(--footer-bg, #004976);
+    color: #fff;
+    padding: 40px 0;
+    margin-top: auto; /* The "Magic" that pushes footer to bottom */
+    text-align: center;
+}
+
+.footer-content {
+    width: var(--page-width);
+    max-width: 95%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+#footer a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+#footer border { display: none; } /* Removes the old osTicket orange line */
+
+#footer a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+#nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Guest CTA */
+.guest-cta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 15px;
+    border-radius: 6px;
+}
+
+.guest-label {
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.signin-link {
+    font-weight: 700 !important;
+    background: #fff;
+    color: var(--primary-color) !important;
+    padding: 6px 12px !important;
+    border-radius: 5px !important;
+    height: auto !important;
+    transition: all 0.2s;
+}
+
+.signin-link:hover {
+    background: #eee !important;
+    color: var(--primary-color) !important;
+}
+
+@media (max-width: 768px) {
+    #nav-toggle {
+        display: block;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
