@@ -78,8 +78,11 @@ if (osTicket::is_ie())
         <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/auth.css">
     <?php } elseif (strpos($_SERVER['SCRIPT_NAME'], 'view.php') !== false) { ?>
         <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/access.css">
+    <?php } elseif (strpos($_SERVER['SCRIPT_NAME'], 'account.php') !== false) { ?>
+        <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/auth.css">
     <?php } ?>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/flags.css?53339df"/>
+    <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/select2.min.css?53339df"/>
 
 
     <!-- Favicons -->

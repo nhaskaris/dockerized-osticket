@@ -179,6 +179,67 @@ body {
     font-weight: 600;
 }
 
+/* Register page styles */
+#register-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-height) - var(--footer-height, 100px));
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.register-card {
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05), 0 4px 10px rgba(0,0,0,0.02);
+    text-align: left;
+}
+
+.register-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.register-card hr {
+    border: 0;
+    border-top: 1px solid #e2e8f0;
+    margin: 1.5rem 0;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #2d3748;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e0;
+}
+
 @media (max-width: 850px) {
     .auth-grid { grid-template-columns: 1fr; }
     .auth-actions { flex-direction: column; gap: 15px; }
@@ -186,4 +247,240 @@ body {
         flex-direction: column;
         text-align: center;
     }
+    .button-group {
+    flex-direction: column;
+    }
+}
+
+/* Form field styling for register and other forms */
+.register-card table,
+.register-card .form_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.register-card table tr,
+.register-card .form_table tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.register-card table th,
+.register-card .form_table th {
+    padding: 0;
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 0.98rem;
+    line-height: 1.4;
+}
+
+.register-card table th .required,
+.register-card .form_table th .required {
+    color: #e53e3e;
+    margin-left: 4px;
+}
+
+.register-card table td,
+.register-card .form_table td {
+    padding: 0;
+    width: 100%;
+}
+
+.register-card table input[type="text"],
+.register-card table input[type="email"],
+.register-card table input[type="password"],
+.register-card table input[type="tel"],
+.register-card table select,
+.register-card table textarea,
+.register-card .form_table input[type="text"],
+.register-card .form_table input[type="email"],
+.register-card .form_table input[type="password"],
+.register-card .form_table input[type="tel"],
+.register-card .form_table select,
+.register-card .form_table textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    font-family: inherit;
+    background: #fff;
+}
+
+.register-card table input[type="text"]:focus,
+.register-card table input[type="email"]:focus,
+.register-card table input[type="password"]:focus,
+.register-card table input[type="tel"]:focus,
+.register-card table select:focus,
+.register-card table textarea:focus,
+.register-card .form_table input[type="text"]:focus,
+.register-card .form_table input[type="email"]:focus,
+.register-card .form_table input[type="password"]:focus,
+.register-card .form_table input[type="tel"]:focus,
+.register-card .form_table select:focus,
+.register-card .form_table textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 73, 118, 0.2);
+}
+
+.register-card table .error,
+.register-card .form_table .error {
+    color: #cf1322;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+}
+
+/* Hide legacy table layout spacing to stack fields nicely */
+.register-card .form_table th,
+.register-card .form_table td {
+    border: 0;
+}
+
+/* Contact info labels rendered by dynamic form */
+.register-card .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.register-card label {
+    display: block;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 1.25rem;
+}
+
+.register-card label br {
+    display: none;
+}
+
+.register-card label .required,
+.register-card label .required + br {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #4a5568;
+}
+
+.register-card label .required::after {
+    content: ' *';
+    color: #e53e3e;
+    font-weight: 700;
+}
+
+.register-card label input[type="email"],
+.register-card label input[type="text"],
+.register-card label input[type="tel"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+.register-card label input[type="email"]:focus,
+.register-card label input[type="text"]:focus,
+.register-card label input[type="tel"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 73, 118, 0.2);
+}
+
+/* Phone + extension inline tidy up */
+.register-card label input[type="tel"] {
+    margin-bottom: 0.5rem;
+}
+
+.register-card label input[type="text"][name$='-ext'] {
+    width: 90px;
+    display: inline-block;
+    margin-left: 10px;
+    padding: 10px 12px;
+}
+
+/* Select2 dropdown styling */
+.select2-container--default .select2-selection--single {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    height: auto !important;
+    padding: 0 !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 73, 118, 0.2) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding: 12px 15px !important;
+    line-height: 1.5 !important;
+    color: #2d3748 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: auto !important;
+    top: 50% !important;
+    right: 12px !important;
+    transform: translateY(-50%) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    margin-top: 0 !important;
+}
+
+.select2-dropdown {
+    border-color: #e2e8f0 !important;
+    border-radius: 6px !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--primary-color) !important;
+}
+
+/* Action button styling */
+.action-button {
+    background: #f0f4f8 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+    margin-left: 8px !important;
+}
+
+.action-button:hover {
+    background: #e2e8f0 !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Timezone row alignment */
+.timezone-group label {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.timezone-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.timezone-row .select2-container {
+    flex: 1;
 }
