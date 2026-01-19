@@ -532,3 +532,266 @@
     gap: 8px;
     align-items: center;
 }
+
+/* Profile page */
+.profile-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+}
+
+.profile-header h1 {
+    margin: 0 0 0.4rem 0;
+    font-size: 26px;
+    color: #1a202c;
+}
+
+.profile-header p {
+    margin: 0 0 1.5rem 0;
+    color: #4a5568;
+}
+
+.profile-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+}
+
+.profile-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.profile-card-title {
+    font-weight: 700;
+    color: #1a202c;
+    font-size: 18px;
+}
+
+.profile-card-hint {
+    color: #718096;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.profile-card-body {
+    display: block;
+}
+
+.profile-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-card table td,
+.profile-card table th {
+    padding: 6px 4px;
+    vertical-align: middle;
+}
+
+.profile-card .form_table tr,
+.profile-card table tr {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.profile-card .form_table th,
+.profile-card table th {
+    padding: 0;
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 0.98rem;
+    line-height: 1.4;
+}
+
+.profile-card .form_table th .required,
+.profile-card table th .required {
+    color: #e53e3e;
+    margin-left: 4px;
+}
+
+.profile-card .form_table td,
+.profile-card table td {
+    padding: 0;
+    width: 100%;
+}
+
+.profile-card .form_table input[type="text"],
+.profile-card .form_table input[type="email"],
+.profile-card .form_table input[type="password"],
+.profile-card .form_table input[type="tel"],
+.profile-card .form_table select,
+.profile-card .form_table textarea,
+.profile-card table input[type="text"],
+.profile-card table input[type="email"],
+.profile-card table input[type="password"],
+.profile-card table input[type="tel"],
+.profile-card table select,
+.profile-card table textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+.profile-card .form_table input[type="text"]:focus,
+.profile-card .form_table input[type="email"]:focus,
+.profile-card .form_table input[type="password"]:focus,
+.profile-card .form_table input[type="tel"]:focus,
+.profile-card .form_table select:focus,
+.profile-card .form_table textarea:focus,
+.profile-card table input[type="text"]:focus,
+.profile-card table input[type="email"]:focus,
+.profile-card table input[type="password"]:focus,
+.profile-card table input[type="tel"]:focus,
+.profile-card table select:focus,
+.profile-card table textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 124, 242, 0.18);
+}
+
+.profile-card .input-group {
+    margin-bottom: 1.1rem;
+}
+
+.profile-card .input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.profile-card .input-group input,
+.profile-card .input-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+.profile-card .input-group input:focus,
+.profile-card .input-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 124, 242, 0.18);
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px 18px;
+}
+
+.profile-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.profile-form input[type="text"],
+.profile-form input[type="password"],
+.profile-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #2d3748;
+    box-sizing: border-box;
+}
+
+.profile-form input[type="text"]:focus,
+.profile-form input[type="password"]:focus,
+.profile-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 124, 242, 0.18);
+}
+
+.profile-form .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-form .input-control {
+    width: 100%;
+}
+
+.profile-form select {
+    height: 44px;
+}
+
+.profile-form .error-text {
+    min-height: 16px;
+    font-size: 12px;
+    color: #e53e3e;
+    margin-top: 6px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.profile-actions .btn-primary,
+.profile-actions .btn-ghost {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-actions .btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(79, 124, 242, 0.28);
+}
+
+.profile-actions .btn-primary:hover { background: #3559c7; }
+
+.profile-actions .btn-ghost {
+    background: #edf2f7;
+    color: #2d3748;
+}
+
+.profile-actions .btn-ghost:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+    .profile-card {
+        padding: 18px 16px;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+    }
+
+    .profile-actions .btn-primary,
+    .profile-actions .btn-ghost {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -142,6 +142,12 @@ elseif ($user = UserAuthenticationBackend::processSignOn($errors, false)) {
     }
 }
 
+// Keep login error inside the form only (avoid header duplicate)
+if (isset($errors['err']) && $errors['err']) {
+    $errors['login'] = $errors['login'] ?: $errors['err'];
+    unset($errors['err']);
+}
+
 if (!$nav) {
     $nav = new UserNav();
     $nav->setActiveNav('status');

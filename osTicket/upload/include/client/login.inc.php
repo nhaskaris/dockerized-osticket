@@ -25,7 +25,9 @@ if ($content) {
         <form action="login.php" method="post" id="clientLogin">
             <?php csrf_token(); ?>
             
-            <?php if ($errors['login']) { ?>
+            <?php if ($errors['err']) { ?>
+                <div class="error-banner"><?php echo Format::htmlchars($errors['err']); ?></div>
+            <?php } elseif ($errors['login']) { ?>
                 <div class="error-banner"><?php echo Format::htmlchars($errors['login']); ?></div>
             <?php } ?>
 
@@ -43,17 +45,13 @@ if ($content) {
         </form>
     </div>
 
-    <?php if ($suggest_pwreset) { ?>
-        <div style="text-align: center; margin-top: 1.5rem;">
-            <a class="link-muted" href="pwreset.php"><?php echo __('Forgot Password?'); ?></a>
-        </div>
-    <?php } ?>
-
     <div class="auth-footer-links">
+        <?php if ($suggest_pwreset) { ?>
+            <a class="link-muted" href="pwreset.php"><?php echo __('Forgot Password?'); ?></a>
+        <?php } ?>
         <?php if ($cfg && $cfg->isClientRegistrationEnabled()) { ?>
             <a href="account.php?do=create"><?php echo __("Don't have an account? Sign up"); ?></a>
         <?php } ?>
-        
         <a href="<?php echo ROOT_PATH; ?>scp/"><?php echo __('Are you an Agent?'); ?></a>
     </div>
 </div>

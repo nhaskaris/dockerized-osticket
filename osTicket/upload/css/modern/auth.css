@@ -3,6 +3,17 @@ body {
     background: #f8fafc; /* Light gray background for the whole page */
 }
 
+.error-banner {
+    background: #ffecec;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
 #login-page-wrapper {
     display: flex;
     flex-direction: column;
@@ -108,10 +119,11 @@ body {
 
 .auth-footer-links {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-top: 1.5rem;
-    gap: 1rem;
+    gap: 1.25rem;
+    flex-wrap: wrap;
 }
 
 .auth-footer-links a {
