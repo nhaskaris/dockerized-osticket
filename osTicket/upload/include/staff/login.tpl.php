@@ -58,7 +58,7 @@ if ($thisstaff && $thisstaff->is2FAPending())
         } ?>
     </form>
     <div style="text-align: center; margin-top: 20px;">
-        <a href="<?php echo ROOT_PATH; ?>index.php" class="button" style="display: inline-block; padding: 10px 20px; background: #e2e8f0; color: #2d3748; text-decoration: none; border-radius: 6px; font-weight: 600;">
+        <a href="<?php echo ROOT_PATH; ?>index.php" class="button" style="display: inline-block; padding: 12px 24px; background: #e2e8f0; color: #2d3748; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; line-height: 1.2;">
             &larr; <?php echo __('Back to Main'); ?>
         </a>
     </div>
