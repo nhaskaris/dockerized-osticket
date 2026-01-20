@@ -955,6 +955,150 @@
 
 .form-actions .btn-secondary:hover { background: #e2e8f0; }
 
+/* Registration Page Styling */
+#register-page-wrapper .form-header-main {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+#register-page-wrapper .form-header-main h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 8px 0;
+}
+
+#register-page-wrapper .form-header-main p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+#register-page-wrapper .register-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    padding: 32px 40px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+#register-page-wrapper .form-section {
+    margin-bottom: 24px;
+}
+
+#register-page-wrapper .form-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 24px 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+#register-page-wrapper .form-section h3:first-of-type {
+    margin-top: 0;
+}
+
+/* Make .input-group match .form-field-wrapper styling */
+#register-page-wrapper .input-group,
+#register-page-wrapper .timezone-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+#register-page-wrapper .input-group label,
+#register-page-wrapper .timezone-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+
+#register-page-wrapper .input-group input,
+#register-page-wrapper .input-group select,
+#register-page-wrapper .timezone-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+#register-page-wrapper .input-group input:focus,
+#register-page-wrapper .input-group select:focus,
+#register-page-wrapper .timezone-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 124, 242, 0.1);
+}
+
+#register-page-wrapper .error {
+    color: #e53e3e;
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+#register-page-wrapper .button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #e2e8f0;
+}
+
+#register-page-wrapper .btn-primary,
+#register-page-wrapper .btn-secondary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+#register-page-wrapper .btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(79, 124, 242, 0.3);
+}
+
+#register-page-wrapper .btn-primary:hover {
+    background: #3559c7;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 124, 242, 0.4);
+}
+
+#register-page-wrapper .btn-secondary {
+    background: #edf2f7;
+    color: #2d3748;
+}
+
+#register-page-wrapper .btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+    #register-page-wrapper .register-card {
+        padding: 24px 20px;
+    }
+    
+    #register-page-wrapper .button-group {
+        flex-direction: column;
+    }
+    
+    #register-page-wrapper .btn-primary,
+    #register-page-wrapper .btn-secondary {
+        width: 100%;
+    }
+}
+
 @media (max-width: 640px) {
     .form-actions { flex-direction: column; }
     .form-actions .btn-primary,

@@ -4490,13 +4490,17 @@ class TextboxWidget extends Widget {
         );
         if ($type == 'text' && isset($types[$config['validator']]))
             $type = $types[$config['validator']];
+        
+        // Add consistent styling for form fields
+        $hasError = $this->field->errors() ? true : false;
+        $errorStyle = $hasError ? 'border-color: #f00;' : '';
         ?>
         <input type="<?php echo $type; ?>"
             id="<?php echo $this->id; ?>"
             <?php echo $autofocus .' '.Format::array_implode('=', ' ',
                     array_filter($attrs)); ?>
             name="<?php echo $this->name; ?>"
-            value="<?php echo Format::htmlchars($this->value, true); ?>"/>
+            value="<?php echo Format::htmlchars($this->value, true); ?>" style="width: 100%; padding: 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; <?php echo $errorStyle; ?>"/>
         <?php
     }
 }
