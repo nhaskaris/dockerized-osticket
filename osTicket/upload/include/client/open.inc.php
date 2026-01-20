@@ -12,6 +12,8 @@ $forms = array();
 if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
     foreach ($topic->getForms() as $F) {
         if (!$F->hasAnyVisibleFields()) continue;
+        // Skip Contact Information form as it's handled separately
+        if (strtolower(trim($F->getTitle())) === strtolower(__('Contact Information'))) continue;
         if ($_POST) {
             $F = $F->instanciate();
             $F->isValidForClient();
@@ -21,10 +23,10 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
 }
 ?>
 
-<div id="open-ticket-wrapper" style="max-width: var(--page-width); margin: 40px auto; padding: 0 20px;">
-    <div class="form-header-main" style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;"><?php echo __('Open a New Ticket');?></h1>
-        <p style="color: var(--text-muted); font-size: 1.1rem;"><?php echo __('Please provide the details below so we can assist you.');?></p>
+<div id="open-ticket-wrapper" class="open-ticket-page">
+    <div class="form-header-main">
+        <h1><?php echo __('Open a New Ticket');?></h1>
+        <p><?php echo __('Please provide the details below so we can assist you.');?></p>
     </div>
 
     <form id="ticketForm" method="post" action="open.php" enctype="multipart/form-data">
@@ -63,8 +65,8 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
             </div>
             
             <div class="form-section">
-                <div class="input-group" style="margin-bottom: 25px;">
-                    <label for="topicId" style="font-weight: 600;"><?php echo __('Help Topic'); ?> <span style="color:red">*</span></label>
+                <div class="input-group">
+                    <label for="topicId"><?php echo __('Help Topic'); ?> <span class="required-star">*</span></label>
                     <select id="topicId" name="topicId" onchange="javascript:
                             var data = $(':input[name]', '#dynamic-form').serialize();
                             $.ajax(
@@ -86,7 +88,7 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
                             }
                         } ?>
                     </select>
-                    <div class="error-msg" style="color:red; font-size:0.8rem; margin-top:4px;"><?php echo $errors['topicId']; ?></div>
+                    <div class="error-msg"><?php echo $errors['topicId']; ?></div>
                 </div>
 
                 <div id="dynamic-form">
@@ -101,11 +103,11 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
         <?php if($cfg && $cfg->isCaptchaEnabled() && (!$thisclient || !$thisclient->isValid())) { ?>
         <div class="modern-card">
             <div class="card-title"><?php echo __('Verification');?></div>
-            <div class="captcha-flex" style="display: flex; align-items: center; gap: 20px;">
-                <img src="captcha.php" border="0" style="border-radius: 4px;">
-                <input id="captcha" type="text" name="captcha" size="6" placeholder="Enter code" style="width: 150px;">
+            <div class="captcha-flex">
+                <img src="captcha.php" border="0" alt="captcha">
+                <input id="captcha" type="text" name="captcha" size="6" placeholder="<?php echo __('Enter code'); ?>">
             </div>
-            <div class="error-msg" style="color:red;"><?php echo $errors['captcha']; ?></div>
+            <div class="error-msg"><?php echo $errors['captcha']; ?></div>
         </div>
         <?php } ?>
 

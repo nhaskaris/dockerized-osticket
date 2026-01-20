@@ -1728,22 +1728,38 @@ class PhoneField extends FormField {
         $config = $this->getConfiguration();
         # Run validator against $this->value for email type
         list($phone, $ext) = explode("X", $value, 2);
-        if ($phone && (
-                !is_numeric($phone) ||
-                strlen($phone) < $config['digits']))
-            $this->_errors[] = __("Enter a valid phone number");
-        if ($ext && $config['ext']) {
-            if (!is_numeric($ext))
-                $this->_errors[] = __("Enter a valid phone extension");
-            elseif (!$phone)
-                $this->_errors[] = __("Enter a phone number for the extension");
+        // Trim whitespace from both parts
+        $phone = trim($phone);
+        $ext = trim($ext);
+        
+        // If extension is provided without phone number, show error
+        if ($ext && !$phone) {
+            $this->_errors[] = __("Enter a phone number for the extension");
+        }
+        
+        // Validate phone number if provided
+        if ($phone) {
+            if (!is_numeric($phone))
+                $this->_errors[] = __("Enter a valid phone number");
+            elseif (strlen($phone) < $config['digits'])
+                $this->_errors[] = sprintf(__("Phone number must be at least %d digits"), $config['digits']);
+        }
+        
+        // Validate extension if provided and extensions are enabled
+        if ($ext && $config['ext'] && !is_numeric($ext)) {
+            $this->_errors[] = __("Enter a valid phone extension");
         }
     }
 
     function parse($value) {
         // NOTE: Value may have a legitimate 'X' to separate the number and
         // extension parts. Don't remove the 'X'
+        if (!$value || !trim($value))
+            return '';
+        
         $val = preg_replace('/[^\dX]/', '', $value);
+        // Remove trailing X if present (extension field was empty)
+        $val = rtrim($val, 'X');
         // Pass completely-incorrect string for validation error
         return $val ?: $value;
     }
@@ -4594,16 +4610,27 @@ class PhoneNumberWidget extends Widget {
     function render($options=array()) {
         $config = $this->field->getConfiguration();
         list($phone, $ext) = explode("X", $this->value);
+        $hasError = $this->field->errors() ? true : false;
+        $errorStyle = $hasError ? 'border-color: #f00;' : '';
         ?>
-        <input id="<?php echo $this->id; ?>" type="tel" name="<?php echo $this->name; ?>" value="<?php
-        echo Format::htmlchars($phone); ?>"/><?php
-        // Allow display of extension field even if disabled if the phone
-        // number being edited has an extension
-        if ($ext || $config['ext']) { ?> <?php echo __('Ext'); ?>:
-            <input type="text" name="<?php
-            echo $this->name; ?>-ext" value="<?php echo Format::htmlchars($ext);
-                ?>" size="5"/>
-        <?php }
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;">
+            <input id="<?php echo $this->id; ?>" type="tel" name="<?php echo $this->name; ?>" value="<?php
+            echo Format::htmlchars($phone); ?>" placeholder="<?php echo __('Phone Number'); ?>" style="width: 100%; padding: 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; <?php echo $errorStyle; ?>"/>
+            <?php
+            // Allow display of extension field even if disabled if the phone
+            // number being edited has an extension
+            if ($ext || $config['ext']) { ?>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; color: #666;">
+                        <?php echo __('Extension'); ?>
+                    </label>
+                    <input type="text" name="<?php
+                    echo $this->name; ?>-ext" value="<?php echo Format::htmlchars($ext);
+                        ?>" placeholder="<?php echo __('Optional'); ?>" style="width: 100%; padding: 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; <?php echo $errorStyle; ?>"/>
+                </div>
+            <?php } ?>
+        </div>
+        <?php
     }
 
     function getValue() {
@@ -4611,7 +4638,13 @@ class PhoneNumberWidget extends Widget {
         $base = parent::getValue();
         if ($base === null)
             return $base;
-        $ext = $data["{$this->name}-ext"];
+        
+        // Trim base value to avoid whitespace-only values
+        $base = trim($base);
+        if (!$base)
+            return '';
+        
+        $ext = isset($data["{$this->name}-ext"]) ? trim($data["{$this->name}-ext"]) : '';
         // NOTE: 'X' is significant. Don't change it
         if ($ext) $ext = 'X'.$ext;
         return $base . $ext;
@@ -5192,11 +5225,11 @@ class ThreadEntryWidget extends Widget {
 
         list($draft, $attrs) = Draft::getDraftAndDataAttrs($namespace, $object_id, $this->value);
         ?>
-        <textarea style="width:100%;" name="<?php echo $this->name; ?>"
+        <textarea name="<?php echo $this->name; ?>"
             placeholder="<?php echo Format::htmlchars($this->field->get('placeholder')); ?>"
             class="<?php if ($config['html']) echo 'richtext';
                 ?> draft draft-delete" <?php echo $attrs; ?>
-            cols="21" rows="8" style="width:80%;"><?php echo
+            cols="21" rows="8" style="width:100%; box-sizing: border-box;"><?php echo
             ThreadEntryBody::clean($this->value ?: $draft); ?></textarea>
     <?php
         if (!$config['attachments'])
