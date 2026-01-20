@@ -252,6 +252,31 @@ input[type="button"],
     background: #d9e2ec;
     color: #1a202c;
 }
+
+.login-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.login-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.login-actions h3 {
+    margin: 0;
+    font-size: 1em;
+}
+
+.login-actions .button {
+    margin: 0;
+}
 input[type="submit"] i,
 input[type="reset"] i,
 input[type="button"] i,

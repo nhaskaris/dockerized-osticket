@@ -7,11 +7,12 @@ if ($thisstaff && $thisstaff->is2FAPending())
     $msg = "2FA Pending";
 
 ?>
-<div id="brickwall"></div>
+<div class="login-backdrop"></div>
+<div class="login-overlay"></div>
 <div id="loginBox">
-    <div id="blur">
-        <div id="background"></div>
-    </div>
+    <a class="button back-main-btn" href="<?php echo ROOT_PATH; ?>index.php" aria-label="<?php echo __('Back to Main'); ?>">
+        <i class="icon-arrow-left"></i>
+    </a>
     <h1 id="logo"><a href="index.php">
         <span class="valign-helper"></span>
         <img src="logo.php?login" alt="osTicket :: <?php echo __('Staff Control Panel');?>" />
@@ -46,22 +47,19 @@ if ($thisstaff && $thisstaff->is2FAPending())
                 echo $info['userid'] ?? null; ?>" placeholder="<?php echo __('Email or Username'); ?>"
                 autofocus autocorrect="off" autocapitalize="off">
             <input type="password" name="passwd" id="pass" maxlength="128" placeholder="<?php echo __('Password'); ?>" autocorrect="off" autocapitalize="off">
-                <h3 style="display:inline"><a id="reset-link" class="<?php
-                    if (!$show_reset || !$cfg->allowPasswordReset()) echo 'hidden';
-                    ?>" href="pwreset.php"><?php echo __('Forgot My Password'); ?></a></h3>
-                <button class="submit button pull-right" type="submit"
-                    name="submit"><i class="icon-signin"></i>
-                    <?php echo __('Log In'); ?>
-                </button>
+                <div class="login-actions">
+                    <h3><a id="reset-link" class="<?php
+                        if (!$show_reset || !$cfg->allowPasswordReset()) echo 'hidden';
+                        ?>" href="pwreset.php"><?php echo __('Forgot My Password'); ?></a></h3>
+                    <button class="submit button" type="submit"
+                        name="submit"><i class="icon-signin"></i>
+                        <?php echo __('Log In'); ?>
+                    </button>
+                </div>
             </fieldset>
         <?php
         } ?>
     </form>
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="<?php echo ROOT_PATH; ?>index.php" class="back-main-btn">
-            &larr; <?php echo __('Back to Main'); ?>
-        </a>
-    </div>
 <?php
 if (($bks=StaffAuthenticationBackend::getExternal())) { ?>
 <div class="or">
