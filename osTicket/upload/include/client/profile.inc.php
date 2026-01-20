@@ -41,7 +41,7 @@ if ($acct = $thisclient->getAccount()) {
                     $TZ_TIMEZONE = $info['timezone'];
                     include INCLUDE_DIR.'staff/templates/timezone.tmpl.php';
                     ?>
-                    <div class="error-text"><?php echo $errors['timezone']; ?></div>
+                    <div class="error"><?php echo $errors['timezone']; ?></div>
                 </div>
 
 <?php if ($cfg->getSecondaryLanguages()) { ?>
@@ -56,7 +56,7 @@ if ($acct = $thisclient->getAccount()) {
                         <option value="<?php echo $l['code']; ?>" <?php echo $selected; ?>><?php echo Internationalization::getLanguageDescription($l['code']); ?></option>
             <?php } ?>
                     </select>
-                    <div class="error-text"><?php echo $errors['lang']; ?></div>
+                    <div class="error"><?php echo $errors['lang']; ?></div>
                 </div>
 <?php } ?>
             </div>
