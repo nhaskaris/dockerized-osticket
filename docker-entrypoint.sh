@@ -69,53 +69,6 @@ if [ ! -f "$CONFIG_FILE" ] || ! grep -q "define('OSTINSTALLED',TRUE);" "$CONFIG_
             echo "Setup directory secured."
         fi
 
-        # 7. Optional dev seeding: create a test user and disable email verification
-        if [ "${DEV_SEED_USER:-0}" = "1" ]; then
-            echo "Seeding dev user and disabling email verification..."
-            cat > /tmp/dev-seed.php <<'PHPCODE'
-<?php
-require_once '/var/www/html/bootstrap.php';
-require_once INCLUDE_DIR . 'class.osticket.php';
-require_once INCLUDE_DIR . 'class.user.php';
-require_once INCLUDE_DIR . 'class.config.php';
-
-$ost = osTicket::start();
-
-// Disable client email verification directly in DB
-$sql = "UPDATE " . CONFIG_TABLE . " SET `value` = '0' WHERE `namespace` = 'core' AND `key` = 'client_verify_email'";
-db_query($sql);
-
-$email = getenv('DEV_USER_EMAIL') ?: 'test@test.gr';
-$username = getenv('DEV_USER_USERNAME') ?: 'test_user';
-$password = getenv('DEV_USER_PASSWORD') ?: 'test_password';
-
-if (!($user = User::lookupByEmail($email))) {
-    $user = User::fromVars(array(
-        'email' => $email,
-        'name'  => 'Dev Test User',
-    ));
-
-    if ($user && $user->save()) {
-        $account = UserAccount::create(array(
-            'user_id' => $user->getId(),
-            'status'  => 1,
-            'timezone' => 'UTC',
-        ));
-        $account->setPolicy('backend', 'local');
-        $account->setPolicy('username', $username);
-        $account->setPassword($password);
-        
-        if ($account->save()) {
-            echo "Successfully seeded dev user: $username / $email\n";
-        }
-    }
-} else {
-    echo "Dev user already exists\n";
-}
-PHPCODE
-            php /tmp/dev-seed.php || echo "Dev seeding script failed"
-        fi
-
         # Lock down config file and ownership post-install
         chmod 0644 "$CONFIG_FILE"
         chown -R www-data:www-data /var/www/html
