@@ -485,16 +485,22 @@ textarea.richtext + .redactor-box,
     padding: 6px 10px !important;
     border: 1px solid transparent !important;
     border-radius: 4px !important;
-    background: transparent !important;
     color: #4a5568 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     text-decoration: none !important;
 }
 
-.redactor-toolbar a i,
-.re-button i,
-.redactor-toolbar button i,
+/* Apply transparent background only to buttons without flags */
+.redactor-toolbar a:not(:has(.flag)),
+.re-button:not(:has(.flag)),
+.redactor-toolbar button:not(:has(.flag)) {
+    background: transparent !important;
+}
+
+.redactor-toolbar a i:not(.flag),
+.re-button i:not(.flag),
+.redactor-toolbar button i:not(.flag),
 .redactor-toolbar a::before,
 .re-button::before,
 .redactor-toolbar button::before {
@@ -503,6 +509,18 @@ textarea.richtext + .redactor-box,
     opacity: 1 !important;
     color: #4a5568 !important;
     font-size: 16px !important;
+}
+
+/* Ensure flag icons display properly */
+.redactor-toolbar .flag,
+.re-button .flag {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 16px !important;
+    height: 12px !important;
+    background-image: url(../images/flags.png) !important;
+    background-repeat: no-repeat !important;
 }
 
 .redactor-toolbar a:hover,
