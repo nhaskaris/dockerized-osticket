@@ -393,6 +393,32 @@ $gmtime = Misc::gmtime();
             <i class="help-tip icon-question-sign" href="#secondary_language"></i>
         </td></tr>
         <tr>
+            <td style="vertical-align:top;padding-top:8px;"><?php echo __('Language-Specific Logos'); ?>:</td>
+            <td>
+                <div style="margin-bottom:8px;">
+                    <em><?php echo __('Configure custom logo URLs for each language (leave empty to use default logo)'); ?></em>
+                </div>
+                <?php
+                $lang_logos = $cfg->get('lang_logos');
+                $lang_logos = $lang_logos ? json_decode($lang_logos, true) : array();
+                $all_configured_langs = array_merge(array($cfg->getPrimaryLanguage()), $cfg->getSecondaryLanguages());
+                foreach ($all_configured_langs as $lang) {
+                    $info = Internationalization::getLanguageInfo($lang);
+                    $logo_url = isset($lang_logos[$lang]) ? $lang_logos[$lang] : '';
+                ?>
+                <div style="margin-bottom:10px;">
+                    <span class="flag flag-<?php echo $info['flag']; ?>"></span>&nbsp;
+                    <strong><?php echo Internationalization::getLanguageDescription($lang); ?>:</strong><br/>
+                    <input type="text" name="lang_logos[<?php echo $lang; ?>]" 
+                           value="<?php echo Format::htmlchars($logo_url); ?>" 
+                           size="60" placeholder="https://example.com/logo-<?php echo $lang; ?>.png"
+                           style="margin-top:4px;"/>
+                </div>
+                <?php } ?>
+                <span class="error">&nbsp;<?php echo $errors['lang_logos']; ?></span>
+            </td>
+        </tr>
+        <tr>
             <th colspan="2">
                 <em><b><?php echo __('Attachments Storage and Settings');?></b>:<i
                 class="help-tip icon-question-sign" href="#attachments"></i></em>

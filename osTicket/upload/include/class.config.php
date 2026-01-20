@@ -1326,6 +1326,18 @@ class OsticketConfig extends Config {
         }
         $secondary_langs = implode(',', $vars['secondary_langs']);
 
+        // Process language-specific logos
+        $lang_logos = array();
+        if (isset($vars['lang_logos']) && is_array($vars['lang_logos'])) {
+            foreach ($vars['lang_logos'] as $lang => $url) {
+                $url = trim($url);
+                if (!empty($url)) {
+                    $lang_logos[$lang] = $url;
+                }
+            }
+        }
+        $lang_logos_json = json_encode($lang_logos);
+
         if ($storagebk)
             $this->update('default_storage_bk', $storagebk->getBkChar());
 
@@ -1349,6 +1361,7 @@ class OsticketConfig extends Config {
             'default_locale'=>$vars['default_locale'],
             'system_language'=>$vars['system_language'],
             'secondary_langs'=>$secondary_langs,
+            'lang_logos'=>$lang_logos_json,
             'max_file_size' => $vars['max_file_size'],
             'autolock_minutes' => $vars['autolock_minutes'],
             'enable_avatars' => isset($vars['enable_avatars']) ? 1 : 0,
