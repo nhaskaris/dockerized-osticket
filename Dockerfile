@@ -47,14 +47,15 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/{s/AllowOverride None/Allo
 RUN docker-php-ext-install gettext
 
 # Permissions and entrypoint
+# Permissions and entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Copy the source code into the image
-COPY ./osTicket/upload /var/www/html
-
-# If you have these files locally, make sure they are in the folder:
+# Copy PHP configuration
 COPY php.ini /usr/local/etc/php/
-RUN chown -R www-data:www-data /var/www/html
+
+# Files will be mounted via docker-compose volumes
+# Set proper ownership on entrypoint
+RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
