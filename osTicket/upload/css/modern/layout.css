@@ -81,7 +81,7 @@
     flex-shrink: 0; /* Prevents footer from squishing */
     background: var(--footer-bg, #004976);
     color: #fff;
-    padding: 20px 0;
+    padding: 12px 0;
     margin-top: auto; /* The "Magic" that pushes footer to bottom */
     text-align: center;
 }
@@ -93,7 +93,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 #footer a {
