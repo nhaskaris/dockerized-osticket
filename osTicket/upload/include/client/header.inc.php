@@ -176,10 +176,14 @@ if (osTicket::is_ie())
                     <?php
                     if ($thisclient && is_object($thisclient) && $thisclient->isValid()
                         && !$thisclient->isGuest()) {
+                        // Show Profile link first
                         echo sprintf('<li><a href="%s">%s</a></li>',
                             ROOT_PATH.'profile.php', __('Profile'));
-                        echo sprintf('<li><a href="%s">%s</a></li>',
-                            $signout_url, __('Sign Out'));
+                        // Show logged-in user's name with Sign Out button
+                        echo '<li class="guest-cta">';
+                        echo '<span class="guest-label">'.Format::htmlchars($thisclient->getName()).'</span>';
+                        echo '<a class="signin-link" href="'.Format::htmlchars($signout_url).'">'.Format::htmlchars(__('Sign Out')).'</a>';
+                        echo '</li>';
                     } elseif($nav) {
                         // Show Guest label with a prominent Sign In CTA under it when registration is public
                         if ($cfg->getClientRegistrationMode() == 'public') {
