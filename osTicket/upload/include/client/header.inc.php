@@ -73,6 +73,8 @@ if (osTicket::is_ie())
 	<link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/base.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/layout.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/forms.css">
+    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill.snow.css?53339df">
+    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill-modern.css?53339df">
 
     <?php if (strpos($_SERVER['SCRIPT_NAME'], 'login.php') !== false) { ?>
         <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/auth.css">
@@ -95,9 +97,8 @@ if (osTicket::is_ie())
     <script src="<?php echo ROOT_PATH; ?>js/osticket.js?53339df"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/filedrop.field.js?53339df"></script>
     <script src="<?php echo ROOT_PATH; ?>js/bootstrap-typeahead.js?53339df"></script>
-    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/redactor.min.js?53339df"></script>
-    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/redactor-plugins.js?53339df"></script>
-    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/redactor-osticket.js?53339df"></script>
+    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill.min.js?53339df"></script>
+    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill-osticket.js?53339df"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/select2.min.js?53339df"></script>
     <?php
     if($ost && ($headers=$ost->getExtraHeaders())) {

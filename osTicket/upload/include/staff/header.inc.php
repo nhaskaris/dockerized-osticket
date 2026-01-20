@@ -50,7 +50,8 @@ if (osTicket::is_ie())
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/jquery-3.7.0.min.js?53339df"></script>
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>css/thread.css?53339df" media="all"/>
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>scp/css/scp.css?53339df" media="all"/>
-    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/redactor.css?53339df" media="screen"/>
+    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill.snow.css?53339df" media="screen"/>
+    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill-modern.css?53339df" media="screen"/>
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>css/typeahead.css?53339df" media="screen"/>
     <link type="text/css" href="<?php echo ROOT_PATH; ?>css/ui-lightness/jquery-ui-1.13.2.custom.min.css?53339df"
          rel="stylesheet" media="screen" />
