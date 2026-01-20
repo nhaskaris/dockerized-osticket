@@ -47,15 +47,16 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/{s/AllowOverride None/Allo
 RUN docker-php-ext-install gettext
 
 # Permissions and entrypoint
-# Permissions and entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Copy PHP configuration
 COPY php.ini /usr/local/etc/php/
 
-# Files will be mounted via docker-compose volumes
-# Set proper ownership on entrypoint
-RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
+# Create html directory but don't change ownership of mounted files
+RUN mkdir -p /var/www/html
+
+# Configure Apache to work with mounted files (read/write with www-data)
+RUN chmod 775 /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]
