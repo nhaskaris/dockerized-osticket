@@ -284,6 +284,19 @@ class PipeApiController extends TicketApiController {
 }
 
 class TicketReplyApiController extends ApiController {
+    // Override response to ensure JSON output for arrays
+    function response($code, $resp) {
+        // If the response is an array, encode as JSON
+        if (is_array($resp)) {
+            $resp = json_encode($resp);
+            $contentType = 'application/json';
+        } else {
+            $contentType = 'text/plain';
+        }
+        // Use Http::response directly to set content type
+        \Http::response($code, $resp, $contentType);
+        exit();
+    }
 
     function getRequestStructure($format, $data=null) {
         $supported = array(
@@ -394,7 +407,33 @@ class TicketReplyApiController extends ApiController {
         if (!$ticket)
             $this->exerr(404, __('Ticket not found'));
 
-        return $ticket;
+        // Build a serializable array for the API response
+        $data = [
+            'id' => $ticket->getId(),
+            'number' => $ticket->getNumber(),
+            'subject' => $ticket->getSubject(),
+            'status' => $ticket->getStatus() ? (is_object($ticket->getStatus()) ? $ticket->getStatus()->getName() : $ticket->getStatus()) : null,
+            'owner' => $ticket->getOwner() ? $ticket->getOwner()->getName() : null,
+            'email' => $ticket->getEmail(),
+            'created' => $ticket->getCreateDate(),
+            'updated' => $ticket->getUpdateDate(),
+        ];
+
+        // Add thread conversation
+        $thread = $ticket->getThread();
+        $data['thread'] = [];
+        if ($thread) {
+            foreach ($thread->getEntries() as $entry) {
+                $data['thread'][] = [
+                    'id' => $entry->getId(),
+                    'type' => method_exists($entry, 'getTypeName') ? $entry->getTypeName() : $entry->getType(),
+                    'poster' => $entry->getPoster(),
+                    'created' => $entry->getCreateDate(),
+                    'body' => method_exists($entry, 'getBody') ? (string)$entry->getBody() : (string)$entry,
+                ];
+            }
+        }
+        return $this->response(200, $data);
     }
 }
 
