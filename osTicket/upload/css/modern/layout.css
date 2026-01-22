@@ -1,3 +1,50 @@
+/* Thread meta column for stacked avatar/name/time */
+.thread-entry .thread-meta-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 120px;
+    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+    background: #f9fafb;
+    border-right: 1px solid #e2e8f0;
+    gap: 0.5rem;
+}
+
+.thread-entry .avatar-stack {
+    margin-bottom: 0.5rem;
+}
+
+.thread-entry .avatar-stack img.avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    display: block;
+}
+
+.thread-entry .meta-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.thread-entry .meta-stack .name-time {
+    text-align: center;
+    margin-bottom: 2px;
+}
+.thread-entry .meta-stack .thread-title-stacked {
+    text-align: center;
+    margin-top: 2px;
+    max-width: 220px;
+    word-break: break-word;
+}
+
+.thread-entry .meta-stack .thread-time {
+    color: #718096;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
 /* layout.css - Header, Nav, and Global Layout */
 #header {
     border-bottom: 1px solid rgba(255,255,255,0.1);

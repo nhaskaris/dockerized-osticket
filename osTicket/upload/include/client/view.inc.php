@@ -166,7 +166,6 @@ if ($blockReply = $ticket->isChild() && $ticket->getMergeType() != 'visual')
 list($draft, $attrs) = Draft::getDraftAndDataAttrs('ticket.client', $ticket->getId(), $info['message']);
 echo $attrs; ?>><?php echo $draft ?: $info['message'];
               ?></textarea>
-              ?></textarea>
       <?php
       if ($messageField->isAttachmentsEnabled()) {
           print $attachments->render(array('client'=>true));
