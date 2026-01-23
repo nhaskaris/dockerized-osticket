@@ -283,6 +283,160 @@ class PipeApiController extends TicketApiController {
     }
 }
 
+class TicketReplyApiController extends ApiController {
+    // Override response to ensure JSON output for arrays
+    function response($code, $resp) {
+        // If the response is an array, encode as JSON
+        if (is_array($resp)) {
+            $resp = json_encode($resp);
+            $contentType = 'application/json';
+        } else {
+            $contentType = 'text/plain';
+        }
+        // Use Http::response directly to set content type
+        \Http::response($code, $resp, $contentType);
+        exit();
+    }
+
+    function getRequestStructure($format, $data=null) {
+        $supported = array(
+            "message", "poster", "userId", "source",
+            "attachments" => array("*" =>
+                array("name", "type", "data", "encoding", "size")
+            )
+        );
+        return $supported;
+    }
+
+    function validate(&$data, $format, $strict=true) {
+        global $ost;
+
+        if(!parent::validate($data, $format, $strict) && $strict)
+            $this->exerr(400, __('Unexpected or invalid data received'));
+
+        if (!$data['message'])
+            $this->exerr(400, __('Message is required'));
+
+        return true;
+    }
+
+    function reply($id, $format) {
+        $this->requireApiKey();
+
+        if (!$id)
+            $this->exerr(404, __('Ticket ID required'));
+
+        $ticket = Ticket::lookupByNumber($id) ?: Ticket::lookup($id);
+        if (!$ticket)
+            $this->exerr(404, __('Ticket not found'));
+
+        $data = $this->getRequest($format);
+        $this->validate($data, $format);
+
+        // 1. Prepare base vars
+        $vars = array(
+            'userId' => (isset($data['userId']) && $data['userId']) ? $data['userId'] : $ticket->getUserId(),
+            'poster' => $data['poster'] ?: 'API User',
+            'ip_address' => $_SERVER['REMOTE_ADDR'],
+        );
+
+        // Pass the message as a simple string if the array format is causing the "Array" text
+        $vars['message'] = $data['message'];
+
+        // 2. Handle User/Poster identification
+        if (isset($data['userId']) && $data['userId'] && User::lookup($data['userId'])) {
+            $vars['userId'] = $data['userId'];
+        } else {
+            $vars['userId'] = $ticket->getUserId();
+        }
+
+        if (!$vars['userId'])
+            $this->exerr(400, __('Ticket owner not found and no userId provided.'));
+
+        $vars['poster'] = $data['poster'] ?: (string) $ticket->getOwner();
+
+        // 3. Handle Attachments (Safely)
+        // We look for the 'message' field in the ticket's specific form
+        $tform = TicketForm::getInstance();
+        if ($tform && ($messageField = $tform->getField('message'))) {
+            $fileField = $messageField->getWidget()->getAttachments();
+            
+            if (isset($data['attachments']) && is_array($data['attachments']) && $fileField) {
+                $vars['files'] = array();
+                foreach($data['attachments'] as $file) {
+                    if (isset($file['encoding']) && !strcasecmp($file['encoding'], 'base64')) {
+                        $file['data'] = base64_decode($file['data'], true);
+                    }
+                    try {
+                        if ($F = $fileField->uploadAttachment($file))
+                            $vars['files'][] = $F->getId();
+                    } catch (Exception $ex) { continue; }
+                }
+            }
+        }
+
+        // 4. Execution with Error Capture
+        try {
+            $message = $ticket->postMessage($vars, 'API');
+            
+            if (!$message) {
+                // Check if osTicket added validation errors to the $vars array
+                $errorMsg = (isset($vars['errors']) && is_array($vars['errors'])) 
+                    ? implode(', ', $vars['errors']) 
+                    : 'Internal osTicket rejection (check filters or ticket status)';
+                
+                $this->exerr(500, "Post Failed: " . $errorMsg);
+            }
+        } catch (Throwable $e) {
+            // This catches fatal PHP errors (like calling methods on null)
+            $this->exerr(500, "Fatal Error: " . $e->getMessage());
+        }
+
+        $this->response(201, $ticket->getNumber());
+    }
+
+    function get($id, $format) {
+        $this->requireApiKey();
+
+        $ticket = null;
+        if (!$id)
+            $this->exerr(404, __('Ticket ID required'));
+
+        // Try to lookup by number (external ID) first, then by database ID
+        $ticket = Ticket::lookupByNumber($id) ?: Ticket::lookup($id);
+        if (!$ticket)
+            $this->exerr(404, __('Ticket not found'));
+
+        // Build a serializable array for the API response
+        $data = [
+            'id' => $ticket->getId(),
+            'number' => $ticket->getNumber(),
+            'subject' => $ticket->getSubject(),
+            'status' => $ticket->getStatus() ? (is_object($ticket->getStatus()) ? $ticket->getStatus()->getName() : $ticket->getStatus()) : null,
+            'owner' => $ticket->getOwner() ? $ticket->getOwner()->getName() : null,
+            'email' => $ticket->getEmail(),
+            'created' => $ticket->getCreateDate(),
+            'updated' => $ticket->getUpdateDate(),
+        ];
+
+        // Add thread conversation
+        $thread = $ticket->getThread();
+        $data['thread'] = [];
+        if ($thread) {
+            foreach ($thread->getEntries() as $entry) {
+                $data['thread'][] = [
+                    'id' => $entry->getId(),
+                    'type' => method_exists($entry, 'getTypeName') ? $entry->getTypeName() : $entry->getType(),
+                    'poster' => $entry->getPoster(),
+                    'created' => $entry->getCreateDate(),
+                    'body' => method_exists($entry, 'getBody') ? (string)$entry->getBody() : (string)$entry,
+                ];
+            }
+        }
+        return $this->response(200, $data);
+    }
+}
+
 class TicketApiError extends Exception {
 
     // Check if exception is because of denial

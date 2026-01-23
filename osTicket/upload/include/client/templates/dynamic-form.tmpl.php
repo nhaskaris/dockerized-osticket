@@ -6,12 +6,13 @@ if (!$form->hasAnyVisibleFields($thisclient))
 
 $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
 ?>
-    <tr><td colspan="2"><hr />
-    <div class="form-header" style="margin-bottom:0.5em">
-    <h3><?php echo Format::htmlchars($form->getTitle()); ?></h3>
-    <div><?php echo Format::display($form->getInstructions()); ?></div>
+<div class="form-section-group">
+    <div class="form-section-header">
+        <h3><?php echo Format::htmlchars($form->getTitle()); ?></h3>
+        <p><?php echo Format::display($form->getInstructions()); ?></p>
     </div>
-    </td></tr>
+    
+    <div class="form-fields-container">
     <?php
     // Form fields, each with corresponding errors follows. Fields marked
     // 'private' are not included in the output for clients
@@ -31,28 +32,27 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
             continue;
         }
         ?>
-        <tr>
-            <td colspan="2" style="padding-top:10px;">
+        <div class="form-field-wrapper">
             <?php if (!$field->isBlockLevel()) { ?>
-                <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
-                    if ($field->isRequiredForUsers()) echo 'required'; ?>">
-                <?php echo Format::htmlchars($field->getLocal('label')); ?>
-            <?php if ($field->isRequiredForUsers() &&
-                    ($field->isEditableToUsers() || $isCreate)) { ?>
-                <span class="error">*</span>
-            <?php }
-            ?></span><?php
-                if ($field->get('hint')) { ?>
-                    <br /><em style="color:gray;display:inline-block"><?php
-                        echo Format::viewableImages($field->getLocal('hint')); ?></em>
-                <?php
-                } ?>
-            <br/>
+                <label for="<?php echo $field->getFormName(); ?>">
+                    <span class="<?php if ($field->isRequiredForUsers()) echo 'required-label'; ?>">
+                        <?php echo Format::htmlchars($field->getLocal('label')); ?>
+                        <?php if ($field->isRequiredForUsers() &&
+                                ($field->isEditableToUsers() || $isCreate) && $_POST) { ?>
+                            <span class="error">*</span>
+                        <?php } ?>
+                    </span>
+                    <?php if ($field->get('hint')) { ?>
+                        <div class="field-hint-text">
+                            <?php echo Format::viewableImages($field->getLocal('hint')); ?>
+                        </div>
+                    <?php } ?>
+                </label>
+            <?php } ?>
+            
             <?php
-            }
             if ($field->isEditableToUsers() || $isCreate) {
                 $field->render(array('client'=>true));
-                ?></label><?php
                 foreach ($field->errors() as $e) { ?>
                     <div class="error"><?php echo $e; ?></div>
                 <?php }
@@ -64,11 +64,13 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
                 elseif (($a=$field->getAnswer()))
                     $val = $a->display();
 
-                echo sprintf('%s </label>', $val);
+                echo sprintf('<div class="static-value">%s</div>', $val);
             }
             ?>
-            </td>
-        </tr>
+        </div>
         <?php
     }
-?>
+    ?>
+    </div>
+</div>
+

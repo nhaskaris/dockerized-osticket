@@ -1,9 +1,10 @@
 #!/bin/bash
+set -e
 
 # 1. Start background services
 service cron start
 
-# 2. Wait for MySQL (Important so the web wizard doesn't error out immediately)
+# 2. Wait for MySQL (Ensures the DB is ready before we attempt installation)
 echo "Waiting for MySQL (db:3306) to become available..."
 while ! timeout 1s bash -c "echo > /dev/tcp/db/3306" 2>/dev/null; do
     sleep 2
@@ -21,44 +22,47 @@ if [ ! -f "$CONFIG_FILE" ] || ! grep -q "define('OSTINSTALLED',TRUE);" "$CONFIG_
     cp "$SAMPLE_FILE" "$CONFIG_FILE"
     chmod 0666 "$CONFIG_FILE"
     
-    # 4. Start Apache in background
+    # 4. Start Apache in background to handle the install request
     apache2-foreground &
     APACHE_PID=$!
     
-    # Wait for Apache to start
-    echo "Waiting for Apache to start..."
-    sleep 3
-    
-    # 5. Automatically submit the installer form
-    echo "Submitting installation form with environment variables..."
-    
-    curl -s -X POST http://localhost/setup/install.php \
-        -d "s=install" \
-        -d "name=$(printf '%s\n' "${OST_NAME:-osTicket}" | sed 's/[&/\]/\\&/g')" \
-        -d "email=${OST_EMAIL:-support@example.com}" \
-        -d "fname=${OST_FNAME:-Admin}" \
-        -d "lname=${OST_LNAME:-User}" \
-        -d "admin_email=${OST_ADMIN_EMAIL:-admin@example.com}" \
-        -d "username=${OST_USERNAME:-admin}" \
-        -d "passwd=${OST_PASSWD:-admin}" \
-        -d "passwd2=${OST_PASSWD2:-admin}" \
-        -d "prefix=${OST_DB_PREFIX:-ost_}" \
-        -d "dbhost=${OST_DB_HOST:-db}" \
-        -d "dbname=${OST_DB_NAME:-osticket}" \
-        -d "dbuser=${OST_DB_USER:-osticket}" \
-        -d "dbpass=${OST_DB_PASS:-password}" \
-        -d "timezone=${OST_TIMEZONE:-UTC}" \
-        -d "lang_id=1" > /tmp/install_response.txt 2>&1
-    
-    echo "Installation response saved."
-    
-    # Wait a moment for the installation to complete
+    # Wait for Apache to be ready to accept the curl request
     sleep 5
     
-    # Check if installation was successful by looking for the success page or config file
-    if grep -q "OSTINSTALLED.*TRUE" "$CONFIG_FILE" 2>/dev/null; then
-        echo "Installation completed successfully!"
-        
+    # 5. Automatically submit the installer form using URL-encoding for safety
+    echo "Submitting installation form..."
+    
+    curl -s -X POST http://localhost/setup/install.php \
+        --data-urlencode "s=install" \
+        --data-urlencode "name=${OST_NAME:-osTicket Support}" \
+        --data-urlencode "email=${OST_EMAIL:-support@example.com}" \
+        --data-urlencode "fname=${OST_FNAME:-Admin}" \
+        --data-urlencode "lname=${OST_LNAME:-User}" \
+        --data-urlencode "admin_email=${OST_ADMIN_EMAIL:-admin@example.com}" \
+        --data-urlencode "username=${OST_USERNAME:-admin}" \
+        --data-urlencode "passwd=${OST_PASSWD:-admin123}" \
+        --data-urlencode "passwd2=${OST_PASSWD:-admin123}" \
+        --data-urlencode "prefix=${OST_DB_PREFIX:-ost_}" \
+        --data-urlencode "dbhost=${OST_DB_HOST:-db}" \
+        --data-urlencode "dbname=${OST_DB_NAME:-osticket}" \
+        --data-urlencode "dbuser=${OST_DB_USER:-osticket}" \
+        --data-urlencode "dbpass=${OST_DB_PASS:-password}" \
+        --data-urlencode "timezone=${OST_TIMEZONE:-UTC}" \
+        --data-urlencode "lang_id=1" > /tmp/install_response.txt 2>&1
+    
+    # 6. Wait for installation to finish writing to the config file
+    echo "Waiting for installation to finalize..."
+    SUCCESS=0
+    for i in {1..30}; do
+        if grep -q "define('OSTINSTALLED',TRUE);" "$CONFIG_FILE" 2>/dev/null; then
+            echo "Installation completed successfully!"
+            SUCCESS=1
+            break
+        fi
+        sleep 2
+    done
+    
+    if [ $SUCCESS -eq 1 ]; then
         # Rename setup directory for security
         if [ -d "/var/www/html/setup" ]; then
             mv /var/www/html/setup /var/www/html/setup_disabled_$(date +%s)
@@ -69,15 +73,13 @@ if [ ! -f "$CONFIG_FILE" ] || ! grep -q "define('OSTINSTALLED',TRUE);" "$CONFIG_
         chmod 0644 "$CONFIG_FILE"
         chown -R www-data:www-data /var/www/html
     else
-        echo "Installation may still be in progress or encountered an issue."
-        echo "Check /tmp/install_response.txt for details."
+        echo "Installation timed out or failed. Check /tmp/install_response.txt"
     fi
     
-    # Keep Apache running
+    # Apache is already running in the background, we must wait on it
     wait $APACHE_PID
 else
     echo "osTicket already installed."
-    # 4. Ensure correct ownership for the web server
     chown -R www-data:www-data /var/www/html
     echo "Starting Apache..."
     exec apache2-foreground

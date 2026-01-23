@@ -231,6 +231,52 @@ input[type="button"],
 -webkit-transition: opacity 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease, color 0.1s ease, background 0.1s ease;
         transition: opacity 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease, color 0.1s ease, background 0.1s ease;
 }
+
+.back-main-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    background: #e2e8f0;
+    color: #2d3748;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    min-height: 42px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
+}
+
+.back-main-btn:hover {
+    background: #d9e2ec;
+    color: #1a202c;
+}
+
+.login-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.login-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.login-actions h3 {
+    margin: 0;
+    font-size: 1em;
+}
+
+.login-actions .button {
+    margin: 0;
+}
 input[type="submit"] i,
 input[type="reset"] i,
 input[type="button"] i,

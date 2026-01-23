@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    && docker-php-ext-configure ldap --with-libdir=lib/$(uname -m)-linux-gnu/ \
     && docker-php-ext-install -j$(nproc) \
         intl \
         mysqli \
@@ -50,11 +50,13 @@ RUN docker-php-ext-install gettext
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Copy the source code into the image
-COPY ./osTicket/upload /var/www/html
-
-# If you have these files locally, make sure they are in the folder:
+# Copy PHP configuration
 COPY php.ini /usr/local/etc/php/
-RUN chown -R www-data:www-data /var/www/html
+
+# Create html directory but don't change ownership of mounted files
+RUN mkdir -p /var/www/html
+
+# Configure Apache to work with mounted files (read/write with www-data)
+RUN chmod 775 /var/www/html
 
 ENTRYPOINT ["docker-entrypoint.sh"]

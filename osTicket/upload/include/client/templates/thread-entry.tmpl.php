@@ -9,38 +9,42 @@ else
 $avatar = '';
 if ($cfg->isAvatarsEnabled() && $user)
     $avatar = $user->getAvatar();
+$type = $entryTypes[$entry->type];
 ?>
-<?php
- $type = $entryTypes[$entry->type];
- ?>
 <div class="thread-entry <?php echo $type; ?> <?php if ($avatar) echo 'avatar'; ?>">
-<?php if ($avatar) { ?>
-    <span class="<?php echo ($entry->type == 'M') ? 'pull-left' : 'pull-right'; ?> avatar">
-<?php echo $avatar; ?>
-    </span>
-<?php } ?>
-    <div class="header">
-        <div class="pull-right">
-            <span style="vertical-align:middle;" class="textra">
-        <?php if ($entry->flags & ThreadEntry::FLAG_EDITED) { ?>
-                <span class="label label-bare" title="<?php
-        echo sprintf(__('Edited on %s by %s'), Format::datetime($entry->updated), 'You');
-                ?>"><?php echo __('Edited'); ?></span>
-        <?php } ?>
-            </span>
+    <div class="thread-meta-column">
+        <div class="avatar-stack">
+        <?php if ($avatar) {
+            echo $avatar;
+        } else {
+            // Show default blank image if no avatar
+            echo '<img class="avatar" src="images/mystery-oscar.png" alt="Avatar" width="64" height="64">';
+        } ?>
         </div>
-<?php
-            echo sprintf(__('<b>%s</b> posted %s'), $name,
-                sprintf('<time datetime="%s" title="%s">%s</time>',
-                    date(DateTime::W3C, Misc::db2gmtime($entry->created)),
-                    Format::daydatetime($entry->created),
-                    Format::datetime($entry->created)
-                )
-            ); ?>
-            <span style="max-width:500px" class="faded title truncate"><?php
-                echo $entry->title; ?>
-            </span>
+        <div class="meta-stack">
+            <div class="name-time">
+                <b><?php echo $name; ?></b>
+                <div class="thread-time">
+                    <?php echo sprintf('<time datetime="%s" title="%s">%s</time>',
+                        date(DateTime::W3C, Misc::db2gmtime($entry->created)),
+                        Format::daydatetime($entry->created),
+                        Format::datetime($entry->created)
+                    ); ?>
+                </div>
+            </div>
+            <div class="thread-title-stacked">
+                <span class="faded title truncate" style="max-width:220px; display:block; margin-top:6px;">
+                    <?php echo $entry->title; ?>
+                </span>
+            </div>
+        </div>
+        <?php if ($entry->flags & ThreadEntry::FLAG_EDITED) { ?>
+            <span class="label label-bare" style="margin-top:6px;" title="<?php
+                echo sprintf(__('Edited on %s by %s'), Format::datetime($entry->updated), 'You');
+            ?>"><?php echo __('Edited'); ?></span>
+        <?php } ?>
     </div>
+    <div class="header" style="display:none;"></div>
     <div class="thread-body" id="thread-id-<?php echo $entry->getId(); ?>">
         <div><?php echo $entry->getBody()->toHtml(); ?></div>
         <div class="clear"></div>

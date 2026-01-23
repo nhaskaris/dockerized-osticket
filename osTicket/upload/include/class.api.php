@@ -73,6 +73,10 @@ class API {
         return ($this->ht['can_create_tickets']);
     }
 
+    function canReplyTickets() {
+        return ($this->ht['can_reply_tickets']);
+    }
+
     function canExecuteCron() {
         return ($this->ht['can_exec_cron']);
     }
@@ -128,14 +132,14 @@ class API {
 
         if($errors) return false;
 
-        $sql=' updated=NOW() '
-            .',isactive='.db_input($vars['isactive'])
-            .',can_create_tickets='.db_input($vars['can_create_tickets'])
-            .',can_exec_cron='.db_input($vars['can_exec_cron'])
+        $sql='isactive='.db_input($vars['isactive'])
+            .',can_create_tickets='.db_input(isset($vars['can_create_tickets']) ? $vars['can_create_tickets'] : 0)
+            .',can_reply_tickets='.db_input(isset($vars['can_reply_tickets']) ? $vars['can_reply_tickets'] : 0)
+            .',can_exec_cron='.db_input(isset($vars['can_exec_cron']) ? $vars['can_exec_cron'] : 0)
             .',notes='.db_input(Format::sanitize($vars['notes']));
 
         if($id) {
-            $sql='UPDATE '.API_KEY_TABLE.' SET '.$sql.' WHERE id='.db_input($id);
+            $sql='UPDATE '.API_KEY_TABLE.' SET updated=NOW(),'.$sql.' WHERE id='.db_input($id);
             if(db_query($sql))
                 return true;
 
@@ -153,7 +157,7 @@ class API {
 
             $errors['err']=sprintf('%s %s',
                 sprintf(__('Unable to add %s.'), __('this API key')),
-                __('Correct any errors below and try again.'));
+                db_error() ?: __('Correct any errors below and try again.'));
         }
 
         return false;
@@ -198,18 +202,24 @@ class ApiController extends Controller {
         // see getApiKey method.
         if (!($key=$this->getKey()))
             return $this->exerr(401, __('Valid API key required'));
-        elseif (!$key->isActive() || $key->getIPAddr() != $this->getRemoteAddr())
+
+        // If an IP is configured on the key, enforce it (unless set to wildcard 0.0.0.0)
+        if (!$key->isActive())
+            return $this->exerr(401, __('API key not found/active or source IP not authorized'));
+
+        $configuredIp = $key->getIPAddr();
+        $remote = $this->getRemoteAddr();
+        if ($configuredIp && $configuredIp !== '0.0.0.0' && strcasecmp($configuredIp, $remote))
             return $this->exerr(401, __('API key not found/active or source IP not authorized'));
 
         return $key;
     }
 
     function getKey() {
-        // Lookup record using sent API Key && IP Addr
+        // Lookup record using sent API Key (IP check is enforced later if set)
         if (!$this->key
-                && ($key=$this->getApiKey())
-                && ($ip=$this->getRemoteAddr()))
-            $this->key = API::lookupByKey($key, $ip);
+                && ($key=$this->getApiKey()))
+            $this->key = API::lookupByKey($key, '');
 
         return $this->key;
     }
@@ -221,9 +231,15 @@ class ApiController extends Controller {
      */
     function getRequest($format, $validate=true) {
         $input = $this->getInputStream();
-        if (!($stream = @fopen($input, 'r')))
-            $this->exerr(400, sprintf('%s (%s)',
-                        __("Unable to read request body"), $input));
+        if (strcasecmp($format, 'json') === 0) {
+            $input = file_get_contents($input);
+        }
+
+        if (!($stream = @fopen('php://temp', 'r+')))
+             $this->exerr(400, sprintf('%s (%s)',
+                        __("Unable to read request body"), 'php://temp'));
+        fwrite($stream, $input);
+        rewind($stream);
 
         return $this->parseRequest($stream, $format, $validate);
     }

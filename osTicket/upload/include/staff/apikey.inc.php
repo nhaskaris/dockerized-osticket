@@ -71,34 +71,26 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
                <?php echo __('IP Address');?>:
             </td>
             <td>
-                <span>
-                <input type="text" size="30" name="ipaddr" value="<?php echo $info['ipaddr']; ?>"i
-                    autofocus>
+                <input type="text" size="30" name="ipaddr" value="<?php echo $info['ipaddr']; ?>">
                 &nbsp;<span class="error">*&nbsp;<?php echo $errors['ipaddr']; ?></span>
-                <i class="help-tip icon-question-sign" href="#ip_addr"></i>
-                </span>
+                <br><em><?php echo __('IP address of remote host. For example');?> 192.168.1.100. <?php echo __('Enter 0.0.0.0 to bypass IP restriction.');?></em>
             </td>
         </tr>
-        <?php } ?>
         <tr>
             <th colspan="2">
                 <em><strong><?php echo __('Services');?>:</strong> <?php echo __('Check applicable API services enabled for the key.');?></em>
             </th>
         </tr>
         <tr>
-            <td colspan=2 style="padding-left:5px">
-                <label>
-                    <input type="checkbox" name="can_create_tickets" value="1" <?php echo $info['can_create_tickets']?'checked="checked"':''; ?> >
-                    <?php echo __('Can Create Tickets <em>(XML/JSON/EMAIL)</em>');?>
-                </label>
-            </td>
-        </tr>
-        <tr>
-            <td colspan=2 style="padding-left:5px">
-                <label>
-                    <input type="checkbox" name="can_exec_cron" value="1" <?php echo $info['can_exec_cron']?'checked="checked"':''; ?> >
-                    <?php echo __('Can Execute Cron');?>
-                </label>
+            <td colspan=2 style="padding-left:5px;">
+                <input type="checkbox" name="can_create_tickets" value="1" <?php echo $info['can_create_tickets']?'checked="checked"':''; ?> >
+                <?php echo __('Can Create Tickets');?> <em>(XML/JSON/EMAIL)</em>
+                <br/>
+                <input type="checkbox" name="can_reply_tickets" value="1" <?php echo $info['can_reply_tickets']?'checked="checked"':''; ?> >
+                <?php echo __('Can Reply Tickets');?> <em>(XML/JSON/EMAIL)</em>
+                <br/>
+                <input type="checkbox" name="can_exec_cron" value="1" <?php echo $info['can_exec_cron']?'checked="checked"':''; ?> >
+                <?php echo __('Can Execute Cron');?>
             </td>
         </tr>
         <tr>
@@ -112,6 +104,7 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
                     rows="8" style="width: 80%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
             </td>
         </tr>
+        <?php } ?>
     </tbody>
 </table>
 <p style="text-align:center">

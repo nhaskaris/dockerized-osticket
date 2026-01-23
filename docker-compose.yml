@@ -4,6 +4,8 @@ services:
     container_name: osticket-db
     restart: always
     command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "${DB_PORT}:3306"
     environment:
       - TZ=${TZ}
     env_file: .env
@@ -20,10 +22,13 @@ services:
       - TZ=${TZ}
     env_file: .env
     volumes:
-      - osticket_files:/var/www/html
+      # Mount local osTicket files directly for live editing
+      - ./osTicket/upload:/var/www/html
+      # Persist uploaded attachments
+      - osticket_attachments:/var/www/html/attachments
     depends_on:
       - db
 
 volumes:
   db_data:
-  osticket_files:
+  osticket_attachments:
