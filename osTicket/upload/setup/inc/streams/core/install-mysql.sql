@@ -476,6 +476,7 @@ CREATE TABLE `%TABLE_PREFIX%help_topic` (
   `number_format` varchar(32) DEFAULT NULL,
   `notes` text,
   `created` datetime NOT NULL,
+  `not_selectable` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   `updated` datetime NOT NULL,
   PRIMARY KEY  (`topic_id`),
   UNIQUE KEY `topic` ( `topic` ,  `topic_pid` ),

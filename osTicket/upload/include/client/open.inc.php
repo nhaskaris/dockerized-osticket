@@ -81,12 +81,19 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
                               });">
                         <option value="" selected="selected">&mdash; <?php echo __('Select a Help Topic');?> &mdash;</option>
                         <?php
-                        if($topics=Topic::getPublicHelpTopics()) {
-                            foreach($topics as $id =>$name) {
-                                echo sprintf('<option value="%d" %s>%s</option>',
-                                        $id, ($info['topicId']==$id)?'selected="selected"':'', $name);
-                            }
-                        } ?>
+    // We pass true as the 5th argument to get the full data array
+    $allTopics = Topic::getHelpTopics(true, false, true, array(), true); 
+    
+    foreach($allTopics as $id => $info) {
+        // Skip if not_selectable is 1
+        if (isset($info['not_selectable']) && $info['not_selectable']) 
+            continue;
+
+        $selected = ($vars['topicId']==$id) ? 'selected="selected"' : '';
+        echo sprintf('<option value="%d" %s>%s</option>',
+            $id, $selected, $info['topic']);
+    }
+    ?>
                     </select>
                     <div class="error-msg"><?php echo $errors['topicId']; ?></div>
                 </div>

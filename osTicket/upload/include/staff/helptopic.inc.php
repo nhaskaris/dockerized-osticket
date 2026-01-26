@@ -46,6 +46,17 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
  <table class="table" border="0" cellspacing="0" cellpadding="2">
     <tbody>
         <tr>
+            <td width="180">
+                <?php echo __('Not selectable for ticket');?>:
+            </td>
+            <td>
+                <input type="hidden" name="not_selectable" value="0">
+                <input type="checkbox" name="not_selectable" value="1" <?php echo !empty($info['not_selectable']) ? 'checked="checked"' : ''; ?>>
+                &nbsp;<span class="error">*&nbsp;<?php echo $errors['not_selectable']; ?></span>
+                <i class="icon-question-sign" title="If checked, this topic will not be available for selection when users open a new ticket. Useful for internal or legacy topics."></i>
+            </td>
+        </tr>
+        <tr>
             <td width="180" class="required">
                <?php echo __('Topic');?>:
             </td>
