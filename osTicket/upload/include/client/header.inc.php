@@ -9,7 +9,7 @@ header("Content-Type: text/html; charset=UTF-8");
 header(
     "Content-Security-Policy: " .
     "frame-ancestors " . $cfg->getAllowIframes() . "; " .
-    "img-src 'self' data:; " .
+    "img-src 'self' data: https://www.gravatar.com http://www.gravatar.com; " .
     "script-src 'self' " .
         "https://www.google.com " .
         "https://www.gstatic.com " .

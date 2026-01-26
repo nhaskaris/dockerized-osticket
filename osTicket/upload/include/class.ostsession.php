@@ -253,13 +253,18 @@ class osTicketSession {
 
         $ttl = $window ?: SESSION_TTL;
         $expire = ($baseTime ?: time()) + $ttl;
+        $samesite = !empty($ost->getConfig()->getAllowIframes()) ? 'None' : 'Strict';
+        $secure = ini_get('session.cookie_secure');
+        if ($samesite === 'None') {
+            $secure = true;
+        }
         $opts = [
             'expires' => $expire,
             'path' => ini_get('session.cookie_path'),
             'domain' => ini_get('session.cookie_domain'),
-            'secure' => ini_get('session.cookie_secure'),
+            'secure' => $secure,
             'httponly' => ini_get('session.cookie_httponly'),
-            'samesite' => !empty($ost->getConfig()->getAllowIframes()) ? 'None' : 'Strict'
+            'samesite' => $samesite
         ];
         setcookie(session_name(), session_id(), $opts);
         // Trigger expire update - neeed for secondary handlers that only
