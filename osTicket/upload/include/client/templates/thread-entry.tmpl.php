@@ -17,8 +17,8 @@ $type = $entryTypes[$entry->type];
         <?php if ($avatar) {
             echo $avatar;
         } else {
-            // Show default blank image if no avatar
-            echo '<img class="avatar" src="images/mystery-oscar.png" alt="Avatar" width="64" height="64">';
+            // Always show a default avatar if no user avatar is set
+            echo '<img class="avatar" src="images/avatar-sprite-ateam.png" alt="Avatar" width="64" height="64">';
         } ?>
         </div>
         <div class="meta-stack">

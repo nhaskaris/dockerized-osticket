@@ -24,6 +24,7 @@ implements TemplateVariable, Searchable {
         'table' => TOPIC_TABLE,
         'pk' => array('topic_id'),
         'ordering' => array('topic'),
+        'fields' => array('topic_id', 'topic_pid', 'ispublic', 'noautoresp', 'flags', 'status_id', 'priority_id', 'dept_id', 'staff_id', 'team_id', 'sla_id', 'page_id', 'sequence_id', 'sort', 'topic', 'number_format', 'notes', 'not_selectable', 'created', 'updated'),
         'joins' => array(
             'parent' => array(
                 'list' => false,
@@ -220,6 +221,7 @@ implements TemplateVariable, Searchable {
         $base = $this->getHashtable();
         $base['custom-numbers'] = $this->hasFlag(self::FLAG_CUSTOM_NUMBERS);
         $base['status'] = $this->getStatus();
+        $base['not_selectable'] = $this->not_selectable;
         return $base;
     }
 
@@ -326,19 +328,25 @@ implements TemplateVariable, Searchable {
       // If localization is specifically requested, then rebuild the list.
       if (!$names || $localize) {
           $objects = self::objects()->values_flat(
-              'topic_id', 'topic_pid', 'ispublic', 'flags', 'topic', 'dept_id'
+                'topic_id', 'topic_pid', 'ispublic', 'flags', 'topic', 'dept_id', 'not_selectable'
           )
           ->order_by('sort');
 
           // Fetch information for all topics, in declared sort order
           $topics = array();
           foreach ($objects as $T) {
-              list($id, $pid, $pub, $flags, $topic, $deptId) = $T;
-
-              $display = ($flags & self::FLAG_ACTIVE);
-              $topics[$id] = array('pid'=>$pid, 'public'=>$pub,
-                  'disabled'=>!$display, 'topic'=>$topic, 'dept_id'=>$deptId);
-          }
+                list($id, $pid, $pub, $flags, $topic, $deptId, $notSelectable) = $T; // Added $notSelectable
+                
+                $display = ($flags & self::FLAG_ACTIVE);
+                $topics[$id] = array(
+                    'pid'=>$pid, 
+                    'public'=>$pub,
+                    'disabled'=>!$display, 
+                    'topic'=>$topic, 
+                    'dept_id'=>$deptId,
+                    'not_selectable'=>$notSelectable // Add this line here
+                );
+            }
 
           $localize_this = function($id, $default) use ($localize) {
               if (!$localize)
@@ -487,6 +495,7 @@ implements TemplateVariable, Searchable {
         $this->setFlag(self::FLAG_CUSTOM_NUMBERS, ($vars['custom-numbers']));
         $this->noautoresp = $vars['noautoresp'];
         $this->notes = Format::sanitize($vars['notes']);
+        $this->set('not_selectable', isset($vars['not_selectable']) ? (int)$vars['not_selectable'] : 0);
 
         $filter_actions = FilterAction::objects()->filter(array('type' => 'topic', 'configuration' => '{"topic_id":'. $this->getId().'}'));
         if ($filter_actions && $vars['status'] == 'active')

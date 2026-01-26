@@ -205,7 +205,6 @@ foreach (AttachmentFile::objects()->filter(array(
 $('#ticketThread').data('inline-attachments', <?php echo json_encode($urls); ?>);
 </script>
 
-<script type="text/javascript" src="js/jquery.multifile.js"></script>
 <script type="text/javascript" src="js/filedrop.field.js"></script>
 
 <script type="text/javascript">
