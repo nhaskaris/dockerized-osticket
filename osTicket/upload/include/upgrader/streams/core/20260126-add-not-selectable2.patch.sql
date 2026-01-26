@@ -1,6 +1,6 @@
 /**
  * @signature 3d823ec24a50e59bc522ec95b3d0bc9e
- * @version v1.18.3
+ * @version v1.18.4
  * @title Add not_selectable to help_topic
  */
 
@@ -19,5 +19,5 @@ DEALLOCATE PREPARE stmt;
 
 -- Finished with patch
 UPDATE `%TABLE_PREFIX%config`
-    SET `value` = '3d823ec24a50e59bc522ec95b3d0bc9e'
+    SET `value` = '7b395b9c2ccde3f6d8f6c7bccb12ccba'
     WHERE `key` = 'schema_signature' AND `namespace` = 'core';
