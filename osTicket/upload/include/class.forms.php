@@ -1163,6 +1163,10 @@ class FormField {
     function getImpl($parent=null) {
         // Allow registration with ::addFieldTypes and delayed calling
         $type = static::getFieldType($this->get('type'));
+        if (!$type || !isset($type[1]) || !is_string($type[1]) || !class_exists($type[1])) {
+            $fieldType = $this->get('type');
+            throw new Exception("Invalid or unregistered field type: '" . $fieldType . "' in " . __METHOD__);
+        }
         $clazz = $type[1];
         $inst = new $clazz($this->ht);
         $inst->parent = $parent;
