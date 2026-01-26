@@ -1,5 +1,5 @@
 /**
- * @signature c54ca350120dfac6f5dca2c7c471985ac6d3b57c
+ * @signature 3d823ec24a50e59bc522ec95b3d0bc9e
  * @version v1.18.3
  * @title Add not_selectable to help_topic
  *
