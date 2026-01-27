@@ -1,4 +1,4 @@
-</div> </div> <div id="footer">
+</div> </div> <div id="footer" style="width:100%;box-sizing:border-box;">
         <div class="footer-content">
             <div class="footer-left">
                 <p><?php echo __('Copyright &copy;'); ?> <?php echo date('Y'); ?> <?php

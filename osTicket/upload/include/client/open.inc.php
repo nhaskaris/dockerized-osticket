@@ -25,6 +25,7 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
 $allTopics = Topic::getHelpTopics(true, false, true, array(), true); 
 ?>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <div id="open-ticket-wrapper" class="open-ticket-page">
     <form id="ticketForm" method="post" action="open.php" enctype="multipart/form-data">
         <?php csrf_token(); ?>
@@ -210,4 +211,13 @@ $(document).ready(function() { renderTopLevel(); });
     .btn-select-only { width: 100%; border: none; background: #eee; color: #555; font-size: 0.75em; padding: 5px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
     .btn-select-only:hover { background: #005fb8; color: white; }
     .topic-card.disabled { opacity: 0.5; pointer-events: none; }
+
+    @media (max-width: 600px) {
+        .topic-grid { grid-template-columns: 1fr; gap: 10px; }
+        .card-main { padding: 12px; font-size: 1em; }
+        .card-icon { font-size: 1.5em; }
+        .modern-card, .form-section, .form-actions { padding: 8px; }
+        .breadcrumb-nav { font-size: 1em; padding: 6px; }
+        .btn-select-only { font-size: 1em; padding: 8px; }
+    }
 </style>

@@ -70,6 +70,60 @@ if (osTicket::is_ie())
     <meta name="description" content="customer support platform">
     <meta name="keywords" content="osTicket, Customer support system, support ticket system">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    html, body { max-width: 100vw; overflow-x: hidden; }
+    #nav-toggle {
+        display: none;
+        background: none;
+        border: none;
+        font-size: 2em;
+        color: #fff;
+        position: absolute;
+        right: 20px;
+        top: 18px;
+        z-index: 1001;
+        cursor: pointer;
+    }
+    @media (max-width: 900px) {
+        #nav-toggle { display: block; }
+        #main-nav {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: var(--header-bg, #004976);
+            width: 100vw;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        #main-nav.open {
+            display: block;
+        }
+        #main-nav ul.flush-right, #main-nav ul.flush-left {
+            display: block;
+            padding: 0;
+            margin: 0;
+        }
+        #main-nav ul li {
+            display: block;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        #main-nav ul li:last-child { border-bottom: none; }
+    }
+    @media (max-width: 600px) {
+        #header, #footer, .form-header-main, .form-section, .form-actions, .profile-page, .register-card, .auth-card, .access-card, .ticket-detail-container, .topic-grid, .span8, .span4, .sidebar, .row {
+            padding: 8px !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+        .topic-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+        .ticket-header-row, .form-header-main, .profile-header, .register-card, .auth-card, .access-card { font-size: 1em !important; }
+        .btn-select-only, button, input, select, textarea { font-size: 1em !important; padding: 8px !important; }
+        h1, h2, h3 { font-size: 1.2em !important; }
+    }
+    </style>
 	<link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/base.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/layout.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/forms.css">
