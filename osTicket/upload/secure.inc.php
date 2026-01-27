@@ -23,7 +23,7 @@ if(!function_exists('clientLoginPage')) {
         global $ost, $cfg, $nav;
         $_SESSION['_client']['auth']['dest'] =
             '/' . ltrim($_SERVER['REQUEST_URI'], '/');
-        require('./login.php');
+        header('Location: login.php');
         exit;
     }
 }
