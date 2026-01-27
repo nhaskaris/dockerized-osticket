@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <?php if ($content) {
     list($title, $body) = $ost->replaceTemplateVariables(
         array($content->getName(), $content->getBody())); ?>

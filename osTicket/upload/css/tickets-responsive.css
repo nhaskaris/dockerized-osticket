@@ -1,0 +1,65 @@
+/* Responsive styles for tickets page */
+@media (max-width: 768px) {
+  #ticketTable, #ticketTable thead, #ticketTable tbody, #ticketTable th, #ticketTable td, #ticketTable tr {
+    display: block;
+    width: 100%;
+  }
+  #ticketTable thead tr {
+    display: none;
+  }
+  #ticketTable tr {
+    margin-bottom: 1.2em;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    background: #fff;
+    padding: 0.5em 0.7em;
+  }
+  #ticketTable td {
+    position: relative;
+    padding-left: 50%;
+    min-height: 40px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    box-sizing: border-box;
+    text-align: left;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  #ticketTable td:before {
+    position: absolute;
+    left: 0.7em;
+    top: 0;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #888;
+    font-size: 0.97em;
+    content: attr(data-label);
+  }
+  #ticketTable td:last-child {
+    border-bottom: none;
+  }
+  .ticket-list-header h1 {
+    font-size: 1.3em;
+    padding: 0.5em 0;
+  }
+  .states-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-bottom: 1em;
+  }
+  .state-pill {
+    font-size: 1em;
+    padding: 0.4em 0.9em;
+  }
+  .search-header, .filter-container {
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  .input-container {
+    width: 100%;
+  }
+}

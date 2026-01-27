@@ -14,6 +14,7 @@ if (isset($user) && $user instanceof ClientCreateRequest) {
 $info = Format::htmlchars(($errors && $_POST)?$_POST:$info);
 
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <div id="register-page-wrapper">
     <div class="form-header-main">
         <h1><?php echo __('Account Registration'); ?></h1>

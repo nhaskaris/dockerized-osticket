@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <div class="profile-page">
     <div class="profile-header">
         <h1><?php echo __('Manage Your Profile Information'); ?></h1>

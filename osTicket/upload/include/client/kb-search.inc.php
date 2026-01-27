@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <div class="row">
 <div class="span8">
     <h1><?php echo __('Frequently Asked Questions');?></h1>
