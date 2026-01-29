@@ -1,44 +1,58 @@
 <?php
 if(!defined('OSTCLIENTINC')) die('Access Denied!');
 
-$info=array();
-if($thisclient && $thisclient->isValid()) {
-    $info=array('name'=>$thisclient->getName(),
-                'email'=>$thisclient->getEmail(),
-                'phone'=>$thisclient->getPhoneNumber());
-}
-$info=($_POST && $errors)?Format::htmlchars($_POST):$info;
-
-$forms = array();
-if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
-    foreach ($topic->getForms() as $F) {
-        if (!$F->hasAnyVisibleFields()) continue;
-        if (strtolower(trim($F->getTitle())) === strtolower(__('Contact Information'))) continue;
-        if ($_POST) {
-            $F = $F->instanciate();
-            $F->isValidForClient();
-        }
-        $forms[] = $F->getForm();
-    }
-}
+// --- 1. PREPARE DATA FOR JAVASCRIPT ---
+// We simply capture the state and encode it as JSON.
+// We do NOT render the form here.
+$serverState = array(
+    'topicId' => isset($_POST['topicId']) ? (int)$_POST['topicId'] : 0,
+    'formData' => ($_POST) ? $_POST : null,
+    'errors' => ($errors) ? $errors : null,
+    'user' => ($thisclient) ? array(
+        'name' => $thisclient->getName(),
+        'email' => $thisclient->getEmail(),
+        'phone' => $thisclient->getPhoneNumber()
+    ) : null
+);
 
 $allTopics = Topic::getHelpTopics(true, false, true, array(), true); 
 ?>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<div id="open-ticket-wrapper" class="open-ticket-page">
+<div id="open-ticket-app">
+    
+    <div id="error-banner" class="error-banner" style="display:none;">
+        <i class="icon-warning-sign"></i>
+        <strong><?php echo __('Please correct the following errors:'); ?></strong>
+        <ul id="error-list"></ul>
+    </div>
+
     <form id="ticketForm" method="post" action="open.php" enctype="multipart/form-data">
         <?php csrf_token(); ?>
         <input type="hidden" name="a" value="open">
+        <input type="hidden" name="topicId" id="topicId" value="">
 
         <div class="modern-card">
             <div class="card-title"><div class="step-number">1</div><?php echo __('Contact Information'); ?></div>
             <div class="form-section">
-                <?php if (!$thisclient) {
-                    $uform = UserForm::getUserForm()->getForm($_POST);
-                    $uform->render(array('staff' => false, 'mode' => 'create'));
-                } else { ?>
-                    <div class="static-val"><strong><?php echo $thisclient->getName(); ?></strong> (<?php echo $thisclient->getEmail(); ?>)</div>
+                <?php if (!$thisclient) { ?>
+                    <div class="user-fields">
+                        <div class="form-group">
+                            <label class="required"><?php echo __('Email Address'); ?></label>
+                            <input type="email" name="email" class="form-control" value="<?php echo $serverState['formData']['email'] ?? ''; ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="required"><?php echo __('Full Name'); ?></label>
+                            <input type="text" name="name" class="form-control" value="<?php echo $serverState['formData']['name'] ?? ''; ?>">
+                        </div>
+                        <div class="form-group">
+                            <label><?php echo __('Phone Number'); ?></label>
+                            <input type="text" name="phone" class="form-control" value="<?php echo $serverState['formData']['phone'] ?? ''; ?>">
+                        </div>
+                    </div>
+                <?php } else { ?>
+                    <div class="static-val">
+                        <strong><?php echo $thisclient->getName(); ?></strong> (<?php echo $thisclient->getEmail(); ?>)
+                    </div>
                 <?php } ?>
             </div>
         </div>
@@ -50,32 +64,16 @@ $allTopics = Topic::getHelpTopics(true, false, true, array(), true);
             </div>
             
             <div class="form-section">
-                <div class="search-container">
-                    <input type="text" id="topic-search" placeholder="<?php echo __('Search for a topic...'); ?>" onkeyup="filterTopics()">
-                </div>
                 <div id="topic-breadcrumb" class="breadcrumb-nav">
-                    <span class="breadcrumb-item active" onclick="renderTopLevel()"><?php echo __('All Categories'); ?></span>
+                    <span class="breadcrumb-item active" onclick="app.renderTopLevel()"><?php echo __('All Categories'); ?></span>
                 </div>
-
-                <select id="topicId" name="topicId" style="display:none;" onchange="javascript:
-                        var data = $(':input[name]', '#dynamic-form').serialize();
-                        $.ajax('ajax.php/form/help-topic/' + this.value, {
-                            data: data, dataType: 'json',
-                            success: function(json) {
-                                $('#dynamic-form').empty().append(json.html);
-                                $(document.head).append(json.media);
-                            }
-                        });">
-                    <option value=""><?php echo __('Select a Help Topic');?></option>
-                    <?php foreach($allTopics as $id => $T) {
-                        echo sprintf('<option value="%d">%s</option>', $id, Format::htmlchars($T['topic']));
-                    } ?>
-                </select>
 
                 <div id="topic-cards-container" class="topic-grid"></div>
 
                 <div id="dynamic-form" style="margin-top: 20px;">
-                    <?php foreach ($forms as $form) { include(CLIENTINC_DIR . 'templates/dynamic-form.tmpl.php'); } ?>
+                    <div id="loading-spinner" style="display:none; text-align:center; padding:20px; color:#ccc;">
+                        <i class="icon-spinner icon-spin icon-3x"></i><br><?php echo __('Loading form...'); ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,138 +84,200 @@ $allTopics = Topic::getHelpTopics(true, false, true, array(), true);
     </form>
 </div>
 
-
-
 <script type="text/javascript">
-const rawTopics = <?php echo json_encode($allTopics); ?>;
+const RAW_TOPICS = <?php echo json_encode($allTopics); ?>;
+const STATE = <?php echo json_encode($serverState); ?>;
 
-function renderTopLevel() {
-    $('#back-btn').hide();
-    $('#topic-search').val('');
-    updateBreadcrumb([]);
-    const container = $('#topic-cards-container');
-    container.empty();
-
-    Object.keys(rawTopics).forEach(id => {
-        const topic = rawTopics[id];
-        if (topic.topic.indexOf(' / ') === -1) {
-            container.append(createCard(id, topic.topic));
+const app = {
+    init: function() {
+        this.renderTopLevel();
+        
+        // If we have state from a failed submission (or draft), restore it
+        if (STATE.topicId && STATE.topicId > 0) {
+            console.log("Restoring State for Topic:", STATE.topicId);
+            this.selectTopic(STATE.topicId, true); // true = restoration mode
         }
-    });
-}
+    },
 
-function renderSubTopics(parentName) {
-    $('#back-btn').show();
-    updateBreadcrumb(parentName.split(' / '));
-    const container = $('#topic-cards-container');
-    container.empty();
+    renderTopLevel: function() {
+        this.updateBreadcrumb([]);
+        $('#topic-cards-container').empty();
+        Object.keys(RAW_TOPICS).forEach(id => {
+            if (RAW_TOPICS[id].topic.indexOf(' / ') === -1) {
+                this.createCard(id, RAW_TOPICS[id].topic);
+            }
+        });
+        $('#dynamic-form').children().not('#loading-spinner').remove();
+        $('#topicId').val('');
+    },
 
-    Object.keys(rawTopics).forEach(id => {
-        const topic = rawTopics[id];
-        if (topic.topic.startsWith(parentName + ' / ')) {
-            const parts = topic.topic.split(' / ');
-            if (parts.length === (parentName.split(' / ').length + 1)) {
-                container.append(createCard(id, parts[parts.length - 1]));
+    renderSubTopics: function(parentName) {
+        this.updateBreadcrumb(parentName.split(' / '));
+        $('#topic-cards-container').empty();
+        Object.keys(RAW_TOPICS).forEach(id => {
+            const topic = RAW_TOPICS[id];
+            if (topic.topic.startsWith(parentName + ' / ')) {
+                const parts = topic.topic.split(' / ');
+                if (parts.length === (parentName.split(' / ').length + 1)) {
+                    this.createCard(id, parts[parts.length - 1]);
+                }
+            }
+        });
+    },
+
+    createCard: function(id, name) {
+        const topic = RAW_TOPICS[id];
+        const hasChildren = Object.values(RAW_TOPICS).some(t => t.topic.startsWith(topic.topic + ' / '));
+        const action = hasChildren 
+            ? `app.renderSubTopics('${topic.topic.replace(/'/g, "\\'")}')` 
+            : `app.selectTopic(${id})`;
+        
+        const html = `
+            <div class="topic-card ${hasChildren ? '' : 'selectable'}" id="card-${id}" onclick="${action}">
+                <div class="card-content">
+                    <i class="${hasChildren ? 'icon-folder-open' : 'icon-file-text-alt'}"></i>
+                    <span>${name}</span>
+                </div>
+            </div>`;
+        $('#topic-cards-container').append(html);
+    },
+
+    // THE CORE LOGIC: Fetch form and Restore Data
+    selectTopic: function(id, isRestoring = false) {
+        // 1. Update UI
+        $('.topic-card').removeClass('active');
+        $(`#card-${id}`).addClass('active');
+        $('#topicId').val(id);
+        
+        // Handle Breadcrumb restoration if deeply nested
+        if(isRestoring) {
+            const topic = RAW_TOPICS[id];
+            if(topic && topic.topic.includes(' / ')) {
+                 const parentPath = topic.topic.substring(0, topic.topic.lastIndexOf(' / '));
+                 this.renderSubTopics(parentPath);
+                 $(`#card-${id}`).addClass('active'); // re-apply active after render
             }
         }
-    });
-}
 
-function createCard(id, displayName) {
-    const topic = rawTopics[id];
-    const hasChildren = Object.values(rawTopics).some(t => t.topic.startsWith(topic.topic + ' / '));
-    const isSelectable = topic.not_selectable != 1;
-    
-    // Logic: If it has children, the primary action is to drill down.
-    // If it's selectable, we add a "Select This" button or allow direct click.
-    let action = hasChildren ? `renderSubTopics('${topic.topic.replace(/'/g, "\\'")}')` : `selectFinalTopic(${id})`;
-    let icon = hasChildren ? 'icon-folder-open' : 'icon-file-text-alt';
-    
-    let html = `<div class="topic-card ${!isSelectable && !hasChildren ? 'disabled' : ''}" id="card-${id}">`;
-    
-    // Main clickable area
-    html += `<div class="card-main" onclick="${action}">
-                <i class="${icon} card-icon"></i>
-                <div class="card-label">${displayName}</div>
-             </div>`;
-    
-    // If it has children AND is selectable, add a small "Select Only This" button
-    if (hasChildren && isSelectable) {
-        html += `<div class="card-action-bar">
-                    <button type="button" class="btn-select-only" onclick="event.stopPropagation(); selectFinalTopic(${id})">
-                        <?php echo __('Select This Topic'); ?>
-                    </button>
-                 </div>`;
-    }
-    
-    html += `</div>`;
-    return html;
-}
+        // 2. Fetch Form via API
+        $('#loading-spinner').show();
+        $('#dynamic-form').children().not('#loading-spinner').remove();
+        
+        // We send current form data so osTicket MIGHT pre-fill some simple fields
+        const payload = $('#ticketForm').serialize();
+        
+        $.ajax({
+            url: 'ajax.php/form/help-topic/' + id,
+            type: 'GET',
+            data: payload,
+            dataType: 'json',
+            success: function(response) {
+                $('#loading-spinner').hide();
+                $('#dynamic-form').append(response.html);
+                
+                // Inject media (scripts/styles) required by the form
+                if (response.media) {
+                    $(document.head).append(response.media);
+                }
 
-function updateBreadcrumb(parts) {
-    const nav = $('#topic-breadcrumb');
-    nav.empty();
-    nav.append(`<span class="breadcrumb-item" onclick="renderTopLevel()"><?php echo __('All'); ?></span>`);
-    
-    let currentPath = "";
-    parts.forEach((p, index) => {
-        currentPath += (index === 0) ? p : " / " + p;
-        const isLast = index === parts.length - 1;
-        nav.append(` <span class="sep">/</span> `);
-        nav.append(`<span class="breadcrumb-item ${isLast ? 'active' : ''}" onclick="renderSubTopics('${currentPath.replace(/'/g, "\\'")}')">${p}</span>`);
-    });
-}
+                // 3. IF RESTORING: MANUALLY RE-POPULATE FIELDS
+                // Because fetching a fresh form wipes user input, we put it back from PHP state
+                if (isRestoring && STATE.formData) {
+                    app.restoreFormData(STATE.formData);
+                    app.showErrors(STATE.errors);
+                }
+                
+                // 4. Force Editor Init (The standard osTicket way)
+                setTimeout(() => {
+                    $('.richtext').each(function() {
+                        $(document).trigger('ost:load-quill', [$(this)]);
+                    });
+                }, 500);
+            }
+        });
+    },
 
-function filterTopics() {
-    const val = $('#topic-search').val().toLowerCase();
-    const container = $('#topic-cards-container');
-    if (val.length < 1) { renderTopLevel(); return; }
-
-    container.empty();
-    $('#back-btn').show();
-    Object.keys(rawTopics).forEach(id => {
-        const topic = rawTopics[id];
-        if (topic.topic.toLowerCase().includes(val) && topic.not_selectable != 1) {
-            container.append(createCard(id, topic.topic));
+    restoreFormData: function(data) {
+        console.log("Restoring form values...");
+        $.each(data, function(key, value) {
+            // Find inputs with this name
+            let $el = $(`[name="${key}"]`);
+            if ($el.length) {
+                $el.val(value);
+            }
+            // Handle array fields (osTicket often uses name="field[]")
+            // This is a basic implementation; complex fields might need more logic
+        });
+        
+        // Special Case: Restore the Message/Body for the Editor
+        if (data.message) {
+             $('textarea[name="message"]').val(data.message);
         }
-    });
-}
+    },
 
-function selectFinalTopic(id) {
-    $('.topic-card').removeClass('active');
-    $(`#card-${id}`).addClass('active');
-    $('#topicId').val(id).trigger('change');
-    $('html, body').animate({ scrollTop: $("#dynamic-form").offset().top - 50 }, 500);
-}
+    showErrors: function(errors) {
+        if (!errors) return;
+        $('#error-banner').show();
+        $('#error-list').empty();
+        
+        // General Errors
+        if (typeof errors === 'string') {
+            $('#error-list').append(`<li>${errors}</li>`);
+        } else if (errors.err) {
+            $('#error-list').append(`<li>${errors.err}</li>`);
+        }
 
-$(document).ready(function() { renderTopLevel(); });
+        // Field Specific Errors
+        $.each(errors, function(key, msg) {
+            if (key === 'err') return;
+            $('#error-list').append(`<li>${msg}</li>`);
+            
+            // Highlight the field
+            $(`[name="${key}"]`).addClass('error-field');
+            $(`[name="${key}"]`).closest('.form-group').addClass('has-error');
+        });
+
+        // Scroll to errors
+        $('html, body').animate({ scrollTop: $('#error-banner').offset().top - 50 }, 500);
+    },
+
+    updateBreadcrumb: function(parts) {
+        const nav = $('#topic-breadcrumb');
+        nav.empty();
+        nav.append(`<span class="breadcrumb-item" onclick="app.renderTopLevel()"><?php echo __('All'); ?></span>`);
+        let path = "";
+        parts.forEach((p, i) => {
+            path += (i === 0) ? p : " / " + p;
+            nav.append(` <span class="sep">/</span> <span class="breadcrumb-item" onclick="app.renderSubTopics('${path.replace(/'/g, "\\'")}')">${p}</span>`);
+        });
+    }
+};
+
+$(document).ready(function() {
+    app.init();
+});
 </script>
 
 <style>
-    .breadcrumb-nav { margin-bottom: 15px; font-size: 0.9em; color: #666; background: #f9f9f9; padding: 10px; border-radius: 6px; }
-    .breadcrumb-item { cursor: pointer; color: #005fb8; text-decoration: underline; }
-    .breadcrumb-item.active { color: #333; text-decoration: none; font-weight: bold; cursor: default; }
-    .sep { color: #ccc; margin: 0 5px; }
-
+    /* Minimal Styles for the App */
+    .modern-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; }
+    .step-number { background: #005fb8; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.8rem; }
+    
     .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-    .topic-card { background: #fff; border: 1px solid #eef2f7; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .card-main { padding: 20px; text-align: center; cursor: pointer; flex-grow: 1; }
-    .topic-card:hover { border-color: #005fb8; transform: translateY(-2px); }
-    .topic-card.active { border: 2px solid #005fb8; background: #f0f7ff; }
-    .card-icon { font-size: 2em; color: #005fb8; margin-bottom: 8px; display: block; }
-    .card-label { font-weight: bold; font-size: 0.9em; }
-
-    .card-action-bar { border-top: 1px solid #eee; padding: 8px; background: #fafafa; }
-    .btn-select-only { width: 100%; border: none; background: #eee; color: #555; font-size: 0.75em; padding: 5px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-    .btn-select-only:hover { background: #005fb8; color: white; }
-    .topic-card.disabled { opacity: 0.5; pointer-events: none; }
-
-    @media (max-width: 600px) {
-        .topic-grid { grid-template-columns: 1fr; gap: 10px; }
-        .card-main { padding: 12px; font-size: 1em; }
-        .card-icon { font-size: 1.5em; }
-        .modern-card, .form-section, .form-actions { padding: 8px; }
-        .breadcrumb-nav { font-size: 1em; padding: 6px; }
-        .btn-select-only { font-size: 1em; padding: 8px; }
-    }
+    .topic-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .topic-card:hover { border-color: #005fb8; transform: translateY(-2px); background: #fff; }
+    .topic-card.active { background: #e6f0fa; border-color: #005fb8; }
+    .topic-card i { font-size: 2em; color: #005fb8; margin-bottom: 10px; display: block; }
+    
+    .breadcrumb-nav { background: #eee; padding: 8px 12px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; }
+    .breadcrumb-item { color: #005fb8; cursor: pointer; text-decoration: underline; }
+    .sep { margin: 0 5px; color: #999; }
+    
+    .error-banner { background: #fff0f0; border-left: 4px solid #d9534f; color: #d9534f; padding: 15px; margin-bottom: 20px; }
+    .error-field { border-color: #d9534f !important; background: #fff5f5; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-control { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    label.required:after { content:" *"; color: red; }
 </style>
