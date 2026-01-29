@@ -2,20 +2,32 @@
 if(!defined('OSTCLIENTINC')) die('Access Denied!');
 
 // --- 1. PREPARE DATA FOR JAVASCRIPT ---
-// We simply capture the state and encode it as JSON.
-// We do NOT render the form here.
+
+// Fetch raw topics from osTicket
+// Args: publicOnly=false (show private if logged in), distinct=false, disabled=true (allow all)
+$rawTopics = Topic::getHelpTopics(false, false, true);
+
+// CRITICAL FIX: Convert simple list [ID => "Name"] to Object [ID => ["topic" => "Name"]]
+// This prevents the JavaScript "undefined" error when reading .topic
+$allTopics = array();
+if (is_array($rawTopics)) {
+    foreach ($rawTopics as $id => $name) {
+        $allTopics[$id] = array('topic' => (string)$name);
+    }
+}
+
+// Prepare Server State
+// We use 'isset' checks to prevent PHP Notices/Warnings
 $serverState = array(
     'topicId' => isset($_POST['topicId']) ? (int)$_POST['topicId'] : 0,
     'formData' => ($_POST) ? $_POST : null,
-    'errors' => ($errors) ? $errors : null,
-    'user' => ($thisclient) ? array(
+    'errors' => (isset($errors) && $errors) ? $errors : null,
+    'user' => (isset($thisclient) && $thisclient) ? array(
         'name' => $thisclient->getName(),
         'email' => $thisclient->getEmail(),
         'phone' => $thisclient->getPhoneNumber()
     ) : null
 );
-
-$allTopics = Topic::getHelpTopics(true, false, true, array(), true); 
 ?>
 
 <div id="open-ticket-app">
@@ -34,24 +46,24 @@ $allTopics = Topic::getHelpTopics(true, false, true, array(), true);
         <div class="modern-card">
             <div class="card-title"><div class="step-number">1</div><?php echo __('Contact Information'); ?></div>
             <div class="form-section">
-                <?php if (!$thisclient) { ?>
+                <?php if (!isset($thisclient) || !$thisclient) { ?>
                     <div class="user-fields">
                         <div class="form-group">
                             <label class="required"><?php echo __('Email Address'); ?></label>
-                            <input type="email" name="email" class="form-control" value="<?php echo $serverState['formData']['email'] ?? ''; ?>">
+                            <input type="email" name="email" class="form-control" value="<?php echo isset($serverState['formData']['email']) ? Format::htmlchars($serverState['formData']['email']) : ''; ?>">
                         </div>
                         <div class="form-group">
                             <label class="required"><?php echo __('Full Name'); ?></label>
-                            <input type="text" name="name" class="form-control" value="<?php echo $serverState['formData']['name'] ?? ''; ?>">
+                            <input type="text" name="name" class="form-control" value="<?php echo isset($serverState['formData']['name']) ? Format::htmlchars($serverState['formData']['name']) : ''; ?>">
                         </div>
                         <div class="form-group">
                             <label><?php echo __('Phone Number'); ?></label>
-                            <input type="text" name="phone" class="form-control" value="<?php echo $serverState['formData']['phone'] ?? ''; ?>">
+                            <input type="text" name="phone" class="form-control" value="<?php echo isset($serverState['formData']['phone']) ? Format::htmlchars($serverState['formData']['phone']) : ''; ?>">
                         </div>
                     </div>
                 <?php } else { ?>
                     <div class="static-val">
-                        <strong><?php echo $thisclient->getName(); ?></strong> (<?php echo $thisclient->getEmail(); ?>)
+                        <strong><?php echo Format::htmlchars($thisclient->getName()); ?></strong> (<?php echo $thisclient->getEmail(); ?>)
                     </div>
                 <?php } ?>
             </div>
@@ -64,6 +76,11 @@ $allTopics = Topic::getHelpTopics(true, false, true, array(), true);
             </div>
             
             <div class="form-section">
+                <div class="search-box-container">
+                    <i class="icon-search search-icon"></i>
+                    <input type="text" id="topic-search" class="form-control search-input" placeholder="<?php echo __('Search for a topic (e.g. Printer, Login)...'); ?>" onkeyup="app.handleSearch(this.value)">
+                </div>
+
                 <div id="topic-breadcrumb" class="breadcrumb-nav">
                     <span class="breadcrumb-item active" onclick="app.renderTopLevel()"><?php echo __('All Categories'); ?></span>
                 </div>
@@ -85,26 +102,72 @@ $allTopics = Topic::getHelpTopics(true, false, true, array(), true);
 </div>
 
 <script type="text/javascript">
-const RAW_TOPICS = <?php echo json_encode($allTopics); ?>;
-const STATE = <?php echo json_encode($serverState); ?>;
+// CRITICAL FIX: We add "|| '{}'" so if PHP outputs nothing, JS gets an empty object instead of crashing.
+const RAW_TOPICS = <?php echo ($t = json_encode($allTopics)) ? $t : '{}'; ?>;
+const STATE = <?php echo ($s = json_encode($serverState)) ? $s : '{}'; ?>;
 
 const app = {
     init: function() {
+        // Safety check to ensure topics loaded
+        if (Object.keys(RAW_TOPICS).length === 0) {
+            console.warn("No topics found or JSON encoding failed.");
+        }
+
         this.renderTopLevel();
         
-        // If we have state from a failed submission (or draft), restore it
+        // Restore State if it exists
         if (STATE.topicId && STATE.topicId > 0) {
             console.log("Restoring State for Topic:", STATE.topicId);
-            this.selectTopic(STATE.topicId, true); // true = restoration mode
+            this.selectTopic(STATE.topicId, true);
+        } else if (STATE.errors) {
+            this.showErrors(STATE.errors);
+        }
+    },
+
+    // --- SEARCH LOGIC ---
+    handleSearch: function(query) {
+        query = query.toLowerCase().trim();
+        
+        // If search is empty, go back to top level view
+        if (query === '') {
+            this.renderTopLevel();
+            return;
+        }
+
+        // Filter Mode: Hide breadcrumbs, show all matching results
+        $('#topic-breadcrumb').hide();
+        $('#topic-cards-container').empty();
+
+        let matchCount = 0;
+        Object.keys(RAW_TOPICS).forEach(id => {
+            let t = RAW_TOPICS[id];
+            let tName = (typeof t === 'string') ? t : t.topic;
+            
+            // Check if name contains search query
+            if (tName.toLowerCase().indexOf(query) !== -1) {
+                this.createCard(id, tName); // Pass full name so user sees context
+                matchCount++;
+            }
+        });
+
+        if (matchCount === 0) {
+            $('#topic-cards-container').html('<div style="grid-column: 1 / -1; text-align:center; color:#999; padding:20px;">No topics found matching "' + query + '"</div>');
         }
     },
 
     renderTopLevel: function() {
+        $('#topic-search').val(''); // Clear search box
+        $('#topic-breadcrumb').show(); // Show breadcrumbs
         this.updateBreadcrumb([]);
         $('#topic-cards-container').empty();
+        
         Object.keys(RAW_TOPICS).forEach(id => {
-            if (RAW_TOPICS[id].topic.indexOf(' / ') === -1) {
-                this.createCard(id, RAW_TOPICS[id].topic);
+            // Safe access to topic string
+            let t = RAW_TOPICS[id];
+            let tName = (typeof t === 'string') ? t : t.topic;
+
+            if (tName && tName.indexOf(' / ') === -1) {
+                this.createCard(id, tName);
             }
         });
         $('#dynamic-form').children().not('#loading-spinner').remove();
@@ -112,12 +175,16 @@ const app = {
     },
 
     renderSubTopics: function(parentName) {
+        $('#topic-search').val(''); // Clear search box
         this.updateBreadcrumb(parentName.split(' / '));
         $('#topic-cards-container').empty();
+        
         Object.keys(RAW_TOPICS).forEach(id => {
-            const topic = RAW_TOPICS[id];
-            if (topic.topic.startsWith(parentName + ' / ')) {
-                const parts = topic.topic.split(' / ');
+            let t = RAW_TOPICS[id];
+            let tName = (typeof t === 'string') ? t : t.topic;
+
+            if (tName && tName.startsWith(parentName + ' / ')) {
+                const parts = tName.split(' / ');
                 if (parts.length === (parentName.split(' / ').length + 1)) {
                     this.createCard(id, parts[parts.length - 1]);
                 }
@@ -126,10 +193,21 @@ const app = {
     },
 
     createCard: function(id, name) {
-        const topic = RAW_TOPICS[id];
-        const hasChildren = Object.values(RAW_TOPICS).some(t => t.topic.startsWith(topic.topic + ' / '));
+        let t = RAW_TOPICS[id];
+        let tName = (typeof t === 'string') ? t : t.topic;
+
+        const hasChildren = Object.values(RAW_TOPICS).some(sub => {
+            let subName = (typeof sub === 'string') ? sub : sub.topic;
+            return subName.startsWith(tName + ' / ');
+        });
+
+        // Safe quote escaping
+        const safeName = tName.replace(/'/g, "\\'");
+        
+        // If filtering (name contains slashes), show full name, otherwise show leaf name
+        // But for action, we always need the full topic path
         const action = hasChildren 
-            ? `app.renderSubTopics('${topic.topic.replace(/'/g, "\\'")}')` 
+            ? `app.renderSubTopics('${safeName}')` 
             : `app.selectTopic(${id})`;
         
         const html = `
@@ -142,28 +220,24 @@ const app = {
         $('#topic-cards-container').append(html);
     },
 
-    // THE CORE LOGIC: Fetch form and Restore Data
     selectTopic: function(id, isRestoring = false) {
-        // 1. Update UI
         $('.topic-card').removeClass('active');
         $(`#card-${id}`).addClass('active');
         $('#topicId').val(id);
         
-        // Handle Breadcrumb restoration if deeply nested
         if(isRestoring) {
-            const topic = RAW_TOPICS[id];
-            if(topic && topic.topic.includes(' / ')) {
-                 const parentPath = topic.topic.substring(0, topic.topic.lastIndexOf(' / '));
+            let t = RAW_TOPICS[id];
+            let tName = (typeof t === 'string') ? t : t.topic;
+            if(tName && tName.includes(' / ')) {
+                 const parentPath = tName.substring(0, tName.lastIndexOf(' / '));
                  this.renderSubTopics(parentPath);
-                 $(`#card-${id}`).addClass('active'); // re-apply active after render
+                 $(`#card-${id}`).addClass('active');
             }
         }
 
-        // 2. Fetch Form via API
         $('#loading-spinner').show();
         $('#dynamic-form').children().not('#loading-spinner').remove();
         
-        // We send current form data so osTicket MIGHT pre-fill some simple fields
         const payload = $('#ticketForm').serialize();
         
         $.ajax({
@@ -175,19 +249,15 @@ const app = {
                 $('#loading-spinner').hide();
                 $('#dynamic-form').append(response.html);
                 
-                // Inject media (scripts/styles) required by the form
                 if (response.media) {
                     $(document.head).append(response.media);
                 }
 
-                // 3. IF RESTORING: MANUALLY RE-POPULATE FIELDS
-                // Because fetching a fresh form wipes user input, we put it back from PHP state
                 if (isRestoring && STATE.formData) {
                     app.restoreFormData(STATE.formData);
                     app.showErrors(STATE.errors);
                 }
                 
-                // 4. Force Editor Init (The standard osTicket way)
                 setTimeout(() => {
                     $('.richtext').each(function() {
                         $(document).trigger('ost:load-quill', [$(this)]);
@@ -198,21 +268,11 @@ const app = {
     },
 
     restoreFormData: function(data) {
-        console.log("Restoring form values...");
         $.each(data, function(key, value) {
-            // Find inputs with this name
             let $el = $(`[name="${key}"]`);
-            if ($el.length) {
-                $el.val(value);
-            }
-            // Handle array fields (osTicket often uses name="field[]")
-            // This is a basic implementation; complex fields might need more logic
+            if ($el.length) $el.val(value);
         });
-        
-        // Special Case: Restore the Message/Body for the Editor
-        if (data.message) {
-             $('textarea[name="message"]').val(data.message);
-        }
+        if (data.message) $('textarea[name="message"]').val(data.message);
     },
 
     showErrors: function(errors) {
@@ -220,35 +280,31 @@ const app = {
         $('#error-banner').show();
         $('#error-list').empty();
         
-        // General Errors
         if (typeof errors === 'string') {
             $('#error-list').append(`<li>${errors}</li>`);
         } else if (errors.err) {
             $('#error-list').append(`<li>${errors.err}</li>`);
         }
 
-        // Field Specific Errors
         $.each(errors, function(key, msg) {
             if (key === 'err') return;
             $('#error-list').append(`<li>${msg}</li>`);
-            
-            // Highlight the field
             $(`[name="${key}"]`).addClass('error-field');
             $(`[name="${key}"]`).closest('.form-group').addClass('has-error');
         });
 
-        // Scroll to errors
         $('html, body').animate({ scrollTop: $('#error-banner').offset().top - 50 }, 500);
     },
 
     updateBreadcrumb: function(parts) {
         const nav = $('#topic-breadcrumb');
         nav.empty();
-        nav.append(`<span class="breadcrumb-item" onclick="app.renderTopLevel()"><?php echo __('All'); ?></span>`);
+        nav.append(`<span class="breadcrumb-item" onclick="app.renderTopLevel()"><?php echo __('All Categories'); ?></span>`);
         let path = "";
         parts.forEach((p, i) => {
             path += (i === 0) ? p : " / " + p;
-            nav.append(` <span class="sep">/</span> <span class="breadcrumb-item" onclick="app.renderSubTopics('${path.replace(/'/g, "\\'")}')">${p}</span>`);
+            const safePath = path.replace(/'/g, "\\'");
+            nav.append(` <span class="sep">/</span> <span class="breadcrumb-item" onclick="app.renderSubTopics('${safePath}')">${p}</span>`);
         });
     }
 };
@@ -259,13 +315,24 @@ $(document).ready(function() {
 </script>
 
 <style>
-    /* Minimal Styles for the App */
     .modern-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; }
     .step-number { background: #005fb8; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.8rem; }
     
+    /* Search Bar Styles */
+    .search-box-container { position: relative; margin-bottom: 15px; }
+    .search-input { padding-left: 35px !important; width: 100%; box-sizing: border-box; }
+    .search-icon { 
+        position: absolute; 
+        left: 12px; 
+        top: 50%; 
+        transform: translateY(-50%);
+        color: #999; 
+        font-size: 1.1em; 
+    }
+
     .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-    .topic-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .topic-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; word-wrap: break-word; }
     .topic-card:hover { border-color: #005fb8; transform: translateY(-2px); background: #fff; }
     .topic-card.active { background: #e6f0fa; border-color: #005fb8; }
     .topic-card i { font-size: 2em; color: #005fb8; margin-bottom: 10px; display: block; }
