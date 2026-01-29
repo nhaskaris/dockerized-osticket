@@ -75,10 +75,6 @@
     color: #2d3748;
 }
 
-.form-field-wrapper .required-label::after {
-    content: " *";
-    color: #f00;
-}
 
 .field-hint-text {
     font-size: 0.85rem;
