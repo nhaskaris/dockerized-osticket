@@ -54,9 +54,9 @@ if ($_POST) {
         } else
             $ost->getCSRF()->rotate();
     }else{
-        $errors['err'] = $errors['err'] ?: sprintf('%s %s',
-            __('Unable to create a ticket.'),
-            __('Correct any errors below and try again.'));
+        // $errors['err'] = $errors['err'] ?: sprintf('%s %s',
+        //     __('Unable to create a ticket.'),
+        //     __('Correct any errors below and try again.'));
     }
 }
 

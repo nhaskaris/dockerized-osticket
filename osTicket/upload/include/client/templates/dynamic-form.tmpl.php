@@ -37,10 +37,6 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
                 <label for="<?php echo $field->getFormName(); ?>">
                     <span class="<?php if ($field->isRequiredForUsers()) echo 'required-label'; ?>">
                         <?php echo Format::htmlchars($field->getLocal('label')); ?>
-                        <?php if ($field->isRequiredForUsers() &&
-                                ($field->isEditableToUsers() || $isCreate) && $_POST) { ?>
-                            <span class="error">*</span>
-                        <?php } ?>
                     </span>
                     <?php if ($field->get('hint')) { ?>
                         <div class="field-hint-text">

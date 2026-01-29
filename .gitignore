@@ -4,3 +4,6 @@ osTicket/upload/setup_disabled_*
 osTicket/upload/include/ost-config.php
 osTicket/upload/attachments/*
 !osTicket/upload/attachments/.gitkeep
+
+# Ignore included languages
+osTicket/upload/include/i18n/*

@@ -159,8 +159,6 @@ if (osTicket::is_ie())
         echo "\n\t".implode("\n\t", $headers)."\n";
     }
 
-    // Offer alternate links for search engines
-    // @see https://support.google.com/webmasters/answer/189077?hl=en
     if (($all_langs = Internationalization::getConfiguredSystemLanguages())
         && (count($all_langs) > 1)
     ) {
