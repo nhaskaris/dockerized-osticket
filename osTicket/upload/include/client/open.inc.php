@@ -76,6 +76,11 @@ $serverState = array(
             </div>
             
             <div class="form-section">
+                <div class="search-box-container">
+                    <i class="icon-search search-icon"></i>
+                    <input type="text" id="topic-search" class="form-control search-input" placeholder="<?php echo __('Search for a topic (e.g. Printer, Login)...'); ?>" onkeyup="app.handleSearch(this.value)">
+                </div>
+
                 <div id="topic-breadcrumb" class="breadcrumb-nav">
                     <span class="breadcrumb-item active" onclick="app.renderTopLevel()"><?php echo __('All Categories'); ?></span>
                 </div>
@@ -119,7 +124,40 @@ const app = {
         }
     },
 
+    // --- SEARCH LOGIC ---
+    handleSearch: function(query) {
+        query = query.toLowerCase().trim();
+        
+        // If search is empty, go back to top level view
+        if (query === '') {
+            this.renderTopLevel();
+            return;
+        }
+
+        // Filter Mode: Hide breadcrumbs, show all matching results
+        $('#topic-breadcrumb').hide();
+        $('#topic-cards-container').empty();
+
+        let matchCount = 0;
+        Object.keys(RAW_TOPICS).forEach(id => {
+            let t = RAW_TOPICS[id];
+            let tName = (typeof t === 'string') ? t : t.topic;
+            
+            // Check if name contains search query
+            if (tName.toLowerCase().indexOf(query) !== -1) {
+                this.createCard(id, tName); // Pass full name so user sees context
+                matchCount++;
+            }
+        });
+
+        if (matchCount === 0) {
+            $('#topic-cards-container').html('<div style="grid-column: 1 / -1; text-align:center; color:#999; padding:20px;">No topics found matching "' + query + '"</div>');
+        }
+    },
+
     renderTopLevel: function() {
+        $('#topic-search').val(''); // Clear search box
+        $('#topic-breadcrumb').show(); // Show breadcrumbs
         this.updateBreadcrumb([]);
         $('#topic-cards-container').empty();
         
@@ -137,6 +175,7 @@ const app = {
     },
 
     renderSubTopics: function(parentName) {
+        $('#topic-search').val(''); // Clear search box
         this.updateBreadcrumb(parentName.split(' / '));
         $('#topic-cards-container').empty();
         
@@ -165,6 +204,8 @@ const app = {
         // Safe quote escaping
         const safeName = tName.replace(/'/g, "\\'");
         
+        // If filtering (name contains slashes), show full name, otherwise show leaf name
+        // But for action, we always need the full topic path
         const action = hasChildren 
             ? `app.renderSubTopics('${safeName}')` 
             : `app.selectTopic(${id})`;
@@ -277,16 +318,32 @@ $(document).ready(function() {
     .modern-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; }
     .step-number { background: #005fb8; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.8rem; }
+    
+    /* Search Bar Styles */
+    .search-box-container { position: relative; margin-bottom: 15px; }
+    .search-input { padding-left: 35px !important; width: 100%; box-sizing: border-box; }
+    .search-icon { 
+        position: absolute; 
+        left: 12px; 
+        top: 50%; 
+        transform: translateY(-50%);
+        color: #999; 
+        font-size: 1.1em; 
+    }
+
     .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-    .topic-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .topic-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; word-wrap: break-word; }
     .topic-card:hover { border-color: #005fb8; transform: translateY(-2px); background: #fff; }
     .topic-card.active { background: #e6f0fa; border-color: #005fb8; }
     .topic-card i { font-size: 2em; color: #005fb8; margin-bottom: 10px; display: block; }
+    
     .breadcrumb-nav { background: #eee; padding: 8px 12px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; }
     .breadcrumb-item { color: #005fb8; cursor: pointer; text-decoration: underline; }
     .sep { margin: 0 5px; color: #999; }
+    
     .error-banner { background: #fff0f0; border-left: 4px solid #d9534f; color: #d9534f; padding: 15px; margin-bottom: 20px; }
     .error-field { border-color: #d9534f !important; background: #fff5f5; }
+    
     .form-group { margin-bottom: 15px; }
     .form-control { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     label.required:after { content:" *"; color: red; }
