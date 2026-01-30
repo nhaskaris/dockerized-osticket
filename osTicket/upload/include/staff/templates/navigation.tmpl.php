@@ -25,4 +25,10 @@ if($nav && ($tabs=$nav->getTabs()) && is_array($tabs)){
         }
         echo "\n</li>\n";
     }
-} ?>
+    // Add custom asset upload link for admins, only on admin panel
+    global $thisstaff;
+    if (defined('ADMINPAGE') && $thisstaff && $thisstaff->isAdmin()) {
+        echo '<li class="inactive"><a href="' . ROOT_PATH . 'scp/admin-upload.php" target="_blank"><i class="icon-upload"></i> Custom Asset Upload</a></li>';
+    }
+}
+?>
