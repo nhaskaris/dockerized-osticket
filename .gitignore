@@ -7,3 +7,6 @@ osTicket/upload/attachments/*
 
 # Ignore included languages
 osTicket/upload/include/i18n/*
+
+# Ignore images and other assets
+osTicket/upload/images/*

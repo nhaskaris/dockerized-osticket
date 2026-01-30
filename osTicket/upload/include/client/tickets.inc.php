@@ -141,7 +141,21 @@ $tickets->values('ticket_id', 'number', 'created', 'isanswered', 'source', 'stat
 
 <div class="ticket-list-header">
     <h1>
-        <a href="<?php echo Http::refresh_url(); ?>"><i class="refresh icon-refresh"></i> <?php echo __('Tickets'); ?></a>
+        <a href="<?php echo Http::refresh_url(); ?>">
+            <i class="refresh icon-refresh"></i> 
+            <?php
+            // Get translated Tickets label
+            $tickets_label = __('Tickets');
+            // Remove unwanted Greek suffix if present
+            $tickets_label = preg_replace('/\s*\(.*?\)/u', '', $tickets_label);
+            // Show ticket count if available
+            $tickets_count = isset($total) ? (int)$total : 0;
+            echo $tickets_label;
+            if ($tickets_count > 0) {
+                echo ' (' . $tickets_count . ')';
+            }
+            ?>
+        </a>
     </h1>
 
     <div class="states-pills">

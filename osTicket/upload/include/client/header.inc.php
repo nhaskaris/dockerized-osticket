@@ -220,6 +220,18 @@ if (osTicket::is_ie())
                             } else {
                                 $label = $nav['desc'];
                             }
+                            // Show ticket count for Tickets nav if user is logged in
+                            if ($name === 'tickets' && $thisclient && $thisclient->isValid() && !$thisclient->isGuest()) {
+                                $ticketCount = 0;
+                                if (class_exists('Ticket')) {
+                                    $ticketCount = Ticket::objects()
+                                        ->filter(array('user_id' => $thisclient->getId()))
+                                        ->count();
+                                }
+                                // Remove Greek suffix if present (e.g., '(αιτημάτων)')
+                                $label = preg_replace('/\s*\(.*?\)/u', '', $label);
+                                $label = sprintf("%s (%d)", $label, $ticketCount);
+                            }
                             echo sprintf('<li><a class="%s %s" href="%s">%s</a></li>%s',
                                 $nav['active']?'active':'',$name,(ROOT_PATH.$nav['href']),Format::htmlchars($label),"\n");
                         }
