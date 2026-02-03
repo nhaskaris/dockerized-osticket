@@ -435,6 +435,93 @@ class TicketReplyApiController extends ApiController {
         }
         return $this->response(200, $data);
     }
+
+    function getList($format) {
+        $this->requireApiKey();
+
+        // Get query parameters for date range
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+        $limit = intval($_GET['limit'] ?? 100);
+        $offset = intval($_GET['offset'] ?? 0);
+        $sortBy = $_GET['sort_by'] ?? 'created';
+        $sortOrder = strtoupper($_GET['sort_order'] ?? 'DESC');
+
+        // Validate sort order
+        if (!in_array($sortOrder, ['ASC', 'DESC'])) {
+            $sortOrder = 'DESC';
+        }
+
+        // Validate sort by field
+        $allowedSortFields = ['created', 'updated', 'number', 'subject'];
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'created';
+        }
+
+        // Limit sanity check
+        if ($limit > 1000) {
+            $limit = 1000;
+        }
+        if ($limit < 1) {
+            $limit = 1;
+        }
+
+        // Build query
+        $query = Ticket::objects();
+
+        // Apply date range filters if provided
+        if ($startDate) {
+            try {
+                // Parse the date string and validate it's a valid format
+                $start = new DateTime($startDate);
+                $query = $query->filter(array('created__gte' => $start->format('Y-m-d H:i:s')));
+            } catch (Exception $e) {
+                return $this->exerr(400, sprintf(__('Invalid start date format: %s'), $startDate));
+            }
+        }
+
+        if ($endDate) {
+            try {
+                // Parse the date string and validate it's a valid format
+                $end = new DateTime($endDate);
+                $query = $query->filter(array('created__lte' => $end->format('Y-m-d H:i:s')));
+            } catch (Exception $e) {
+                return $this->exerr(400, sprintf(__('Invalid end date format: %s'), $endDate));
+            }
+        }
+
+        // Apply sorting and pagination
+        if ($sortOrder === 'DESC') {
+            $query = $query->order_by('-' . $sortBy);
+        } else {
+            $query = $query->order_by($sortBy);
+        }
+        $totalCount = $query->count();
+        $tickets = $query->limit($limit)->offset($offset);
+
+        // Build response
+        $data = [
+            'total' => $totalCount,
+            'limit' => $limit,
+            'offset' => $offset,
+            'tickets' => []
+        ];
+
+        foreach ($tickets as $ticket) {
+            $data['tickets'][] = [
+                'id' => $ticket->getId(),
+                'number' => $ticket->getNumber(),
+                'subject' => $ticket->getSubject(),
+                'status' => $ticket->getStatus() ? (is_object($ticket->getStatus()) ? $ticket->getStatus()->getName() : $ticket->getStatus()) : null,
+                'owner' => $ticket->getOwner() ? $ticket->getOwner()->getName() : null,
+                'email' => $ticket->getEmail(),
+                'created' => $ticket->getCreateDate(),
+                'updated' => $ticket->getUpdateDate(),
+            ];
+        }
+
+        return $this->response(200, $data);
+    }
 }
 
 class TicketApiError extends Exception {
