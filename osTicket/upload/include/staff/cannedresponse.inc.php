@@ -73,24 +73,31 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
             </th>
         </tr>
         <tr>
-            <td colspan=2>
-                <div><b><?php echo __('Title');?></b><span class="error">*&nbsp;<?php echo $errors['title']; ?></span></div>
-                <input type="text" size="70" name="title" value="<?php echo $info['title']; ?>">
-                <br><br>
-                <div style="margin-bottom:0.5em"><b><?php echo __('Canned Response'); ?></b>
+            <td colspan=2 style="padding: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <b><?php echo __('Title');?></b><span class="error">*&nbsp;<?php echo $errors['title']; ?></span>
+                </div>
+                <input type="text" size="70" name="title" value="<?php echo $info['title']; ?>" style="width: 98%; max-width: 800px;">
+                
+                <div style="margin-top: 20px; margin-bottom: 10px;">
+                    <b><?php echo __('Canned Response'); ?></b>
                     <font class="error">*&nbsp;<?php echo $errors['response']; ?></font>
                     &nbsp;&nbsp;&nbsp;(<a class="tip" href="#ticket_variables"><?php echo __('Supported Variables'); ?></a>)
-                    </div>
-                <textarea name="response" cols="21" rows="12"
-                    data-root-context="cannedresponse"
-                    style="width:98%;" class="richtext draft draft-delete" <?php
+                </div>
+                <div style="clear: both; width: 100%; max-width: 1000px;">
+                    <textarea name="response" cols="21" rows="12"
+                        data-root-context="cannedresponse"
+                        style="width:100%;" class="richtext draft draft-delete" <?php
     list($draft, $attrs) = Draft::getDraftAndDataAttrs('canned',
         is_object($canned) ? $canned->getId() : false, $info['response']);
     echo $attrs; ?>><?php echo $draft ?: Format::viewableImages($info['response']);
-                ?></textarea>
-                <div><h3><?php echo __('Canned Attachments'); ?> <?php echo __('(optional)'); ?>
-                &nbsp;<i class="help-tip icon-question-sign" href="#canned_attachments"></i></h3>
-                <div class="error"><?php echo $errors['files']; ?></div>
+                    ?></textarea>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3><?php echo __('Canned Attachments'); ?> <?php echo __('(optional)'); ?>
+                    &nbsp;<i class="help-tip icon-question-sign" href="#canned_attachments"></i></h3>
+                    <div class="error"><?php echo $errors['files']; ?></div>
                 </div>
                 <?php
                 $attachments = $canned_form->getField('attachments');
@@ -98,7 +105,6 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
                     $attachments->setAttachments($canned->attachments->window(['inline' => false]));
                 }
                 print $attachments->render(); ?>
-                <br/>
             </td>
         </tr>
         <tr>
@@ -107,9 +113,11 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
             </th>
         </tr>
         <tr>
-            <td colspan=2>
-                <textarea class="richtext no-bar" name="notes" cols="21"
-                    rows="8" style="width: 80%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+            <td colspan=2 style="padding: 10px;">
+                <div style="clear: both; width: 100%; max-width: 800px;">
+                    <textarea class="richtext no-bar" name="notes" cols="21"
+                        rows="8" style="width: 100%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+                </div>
             </td>
         </tr>
     </tbody>

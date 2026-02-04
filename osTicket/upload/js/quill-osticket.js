@@ -30,8 +30,8 @@
         return this.each(function() {
             const $textarea = $(this);
             
-            // Skip if already initialized
-            if (quillInstances.has(this)) {
+            // Skip if already initialized - check multiple conditions
+            if (quillInstances.has(this) || $textarea.data('quill') || $textarea.next('.quill-container').length) {
                 return;
             }
 
@@ -132,18 +132,22 @@
 
     // Initialize all richtext textareas
     function findRichtextBoxes() {
-        $('.richtext').each(function(i, el) {
+        $('.richtext:visible').each(function(i, el) {
             const $el = $(el);
-            if (!quillInstances.has(el) && !$el.data('quill')) {
+            // Check if already initialized - check both WeakMap and next sibling
+            if (!quillInstances.has(el) && !$el.data('quill') && !$el.next('.quill-container').length) {
                 $el.quill();
             }
         });
     }
 
-    // Auto-initialize on document ready and after AJAX
+    // Auto-initialize on document ready
     $(function() {
         findRichtextBoxes();
-        $(document).ajaxStop(findRichtextBoxes);
+        // Only reinitialize after AJAX for new elements
+        $(document).ajaxStop(function() {
+            setTimeout(findRichtextBoxes, 100);
+        });
     });
 
     // Handle form submissions - ensure content is synced
