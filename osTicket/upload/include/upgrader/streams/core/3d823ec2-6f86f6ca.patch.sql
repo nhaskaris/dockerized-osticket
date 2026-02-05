@@ -19,5 +19,5 @@ DEALLOCATE PREPARE stmt;
 
 -- Finished with patch
 UPDATE `%TABLE_PREFIX%config`
-    SET `value` = '7b395b9c2ccde3f6d8f6c7bccb12ccba'
+    SET `value` = '6f86f6ca9d84ce53d72bf99e5d579860'
     WHERE `key` = 'schema_signature' AND `namespace` = 'core';
