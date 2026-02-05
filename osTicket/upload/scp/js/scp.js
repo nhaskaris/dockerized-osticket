@@ -207,9 +207,12 @@ var scp_prep = function() {
 
     $('form select#cannedResp').select2({width: '350px'});
     $('form select#cannedResp').on('select2:opening', function (e) {
-        var redactor = $('.richtext', $(this).closest('form')).data('redactor');
-        if (redactor)
-            redactor.api('selection.save');
+        var box = $('.richtext', $(this).closest('form'));
+        var quill = box.data('quillInstance');
+        if (quill) {
+            var selection = quill.getSelection();
+            box.data('savedSelection', selection);
+        }
     });
 
     $('form select#cannedResp').change(function() {
@@ -231,11 +234,12 @@ var scp_prep = function() {
                 success: function(canned){
                     //Canned response.
                     var box = $('#response', fObj),
-                        redactor = $R('#response.richtext');
+                        quill = box.data('quillInstance');
                     if (canned.response) {
-                        if (redactor) {
-                            redactor.api('selection.restore');
-                            redactor.insertion.insertHtml(canned.response);
+                        if (quill) {
+                            var selection = box.data('savedSelection') || quill.getSelection() || { index: quill.getLength(), length: 0 };
+                            quill.clipboard.dangerouslyPasteHTML(selection.index, canned.response);
+                            box.val(quill.root.innerHTML);
                         } else
                             box.val(box.val() + canned.response);
                     }

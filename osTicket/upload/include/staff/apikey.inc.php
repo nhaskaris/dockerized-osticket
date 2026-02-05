@@ -99,9 +99,11 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
             </th>
         </tr>
         <tr>
-            <td colspan=2>
-                <textarea class="richtext no-bar" name="notes" cols="21"
-                    rows="8" style="width: 80%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+            <td colspan=2 style="padding: 10px;">
+                <div style="clear: both; width: 100%; max-width: 800px;">
+                    <textarea class="richtext no-bar" name="notes" cols="21"
+                        rows="8" style="width: 100%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+                </div>
             </td>
         </tr>
         <?php } ?>
