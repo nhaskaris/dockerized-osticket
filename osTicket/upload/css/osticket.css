@@ -91,3 +91,27 @@ input.dp {
 .warning_bar { margin: 0; padding: 5px 10px 5px 36px; height: 16px; line-height: 16px; border: 1px solid #f26522; background: url('../assets/default/images/icons/alert.png') 10px 50% no-repeat #ffffdd; }
 
 .error_bar { margin: 0; padding: 5px 10px 5px 36px; height: 16px; line-height: 16px; border: 1px solid #a00; background: url('../assets/default/images/icons/error.png') 10px 50% no-repeat #fff0f0; }
+/* Fix for richtext textarea overflow */
+textarea.richtext {
+    display: block !important;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+/* Ensure form buttons are visible below textareas */
+.tab_content {
+    overflow: visible;
+}
+
+form p[style*="text-align:center"] {
+    clear: both;
+    position: relative;
+    z-index: 1000;
+    margin-top: 40px;
+}
+
+/* Fix textarea border box sizing to match content */
+.form_table textarea {
+    width: 100%;
+    box-sizing: border-box;
+}

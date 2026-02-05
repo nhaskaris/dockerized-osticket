@@ -11,6 +11,7 @@ header(
     "frame-ancestors " . $cfg->getAllowIframes() . "; " .
     "img-src 'self' data: https://www.gravatar.com http://www.gravatar.com; " .
     "script-src 'self' " .
+        "https://cdn.quilljs.com " .
         "https://www.google.com " .
         "https://www.gstatic.com " .
         "https://www.recaptcha.net " .
@@ -127,8 +128,8 @@ if (osTicket::is_ie())
 	<link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/base.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/layout.css">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/forms.css">
-    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill.snow.css?53339df">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill-modern.css?53339df">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
     <?php if (strpos($_SERVER['SCRIPT_NAME'], 'login.php') !== false) { ?>
         <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/modern/auth.css">
@@ -151,7 +152,7 @@ if (osTicket::is_ie())
     <script src="<?php echo ROOT_PATH; ?>js/osticket.js?53339df"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/filedrop.field.js?53339df"></script>
     <script src="<?php echo ROOT_PATH; ?>js/bootstrap-typeahead.js?53339df"></script>
-    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill.min.js?53339df"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill-osticket.js?53339df"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/select2.min.js?53339df"></script>
     <?php

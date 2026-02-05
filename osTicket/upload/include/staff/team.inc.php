@@ -115,12 +115,13 @@ $info = $team->getInfo();
         <tr>
             <td colspan=2>
                 <textarea class="richtext no-bar" name="notes" cols="21"
-                    rows="8" style="width: 80%;"><?php echo Format::viewableImages(Format::htmlchars($team->notes, true)); ?></textarea>
+                    rows="8" style="width: 80%; display: block;"><?php echo Format::viewableImages(Format::htmlchars($team->notes, true)); ?></textarea>
             </td>
         </tr>
     </tbody>
 </table>
 </div>
+<div style="clear: both; height: 60px;"></div>
 
 <?php
 $agents = Staff::getStaffMembers();

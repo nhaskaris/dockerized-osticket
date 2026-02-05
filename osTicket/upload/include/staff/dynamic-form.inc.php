@@ -286,13 +286,14 @@ if ($form && count($langs) > 1) { ?>
         </tr>
         <tr>
             <td colspan="7"><textarea class="richtext no-bar" name="notes"
-                rows="6" cols="80"><?php
+                rows="6" cols="80" style="display: block;"><?php
                 echo Format::viewableImages($info['notes']); ?></textarea>
             </td>
         </tr>
     </tbody>
     </table>
-<p class="centered">
+<div style="clear: both; height: 60px;"></div>
+<p class="centered" style="position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset'); ?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel'); ?>" onclick='window.location.href="?"'>

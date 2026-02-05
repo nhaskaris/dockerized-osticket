@@ -116,7 +116,7 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
             <td colspan=2 style="padding: 10px;">
                 <div style="clear: both; width: 100%; max-width: 800px;">
                     <textarea class="richtext no-bar" name="notes" cols="21"
-                        rows="8" style="width: 100%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+                        rows="8" style="width: 100%; display: block;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
                 </div>
             </td>
         </tr>
@@ -127,7 +127,8 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
     <div id="msg_warning"><?php echo __('Canned response is in use by email filter(s)');?>: <?php
     echo implode(', ', $canned->getFilters()); ?></div>
  <?php } ?>
-<p style="text-align:center;">
+<div style="clear: both; height: 60px;"></div>
+<p style="text-align:center; position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset'); ?>" onclick="javascript:
         $(this.form).find('textarea.richtext')

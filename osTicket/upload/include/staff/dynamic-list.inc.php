@@ -104,14 +104,15 @@ $info=Format::htmlchars(($errors && $_POST) ? array_merge($info,$_POST) : $info,
         </tr>
         <tr>
             <td colspan="7"><textarea name="notes" class="richtext no-bar"
-                rows="6" cols="80"><?php
+                rows="6" cols="80" style="display: block;"><?php
                 echo Format::viewableImages($info['notes']); ?></textarea>
             </td>
         </tr>
     </tbody>
     </table>
 </div>
-<div id="properties" class="hidden tab_content">
+<div style="clear: both; height: 60px;"></div>
+<div id="properties" class="hidden tab_content" style="position: relative; z-index: 100;">
     <table class="form_table" width="940" border="0" cellspacing="0" cellpadding="2">
     <thead>
         <tr>
@@ -227,7 +228,7 @@ $info=Format::htmlchars(($errors && $_POST) ? array_merge($info,$_POST) : $info,
 </div>
 <?php } ?>
 
-<p class="centered">
+<p class="centered" style="position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset'); ?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel'); ?>"

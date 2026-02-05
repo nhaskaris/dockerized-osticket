@@ -160,11 +160,11 @@ if (count($langs) > 1) { ?>
     <b><?php echo __('Internal Notes');?></b>:
     <span class="faded"><?php echo __("Be liberal, they're internal");?></span>
     <textarea class="richtext no-bar" name="notes" cols="21"
-        rows="8" style="width: 80%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+        rows="8" style="width: 80%; display: block;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
 </div>
 
-
-<p style="text-align:center">
+<div style="clear: both; height: 60px;"></div>
+<p style="text-align:center; position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset');?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel');?>" onclick='window.location.href="categories.php"'>
