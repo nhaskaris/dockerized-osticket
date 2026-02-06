@@ -4,6 +4,7 @@ header(
     "Content-Security-Policy: " .
     "frame-ancestors " . $cfg->getAllowIframes() . "; " .
     "script-src 'self' " .
+        "https://cdn.quilljs.com " .
         "https://www.google.com " .
         "https://www.gstatic.com " .
         "https://www.recaptcha.net " .
@@ -48,9 +49,12 @@ if (osTicket::is_ie())
     </style>
     <![endif]-->
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/jquery-3.7.0.min.js?53339df"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill-osticket.js?v=FIX_LAYOUT_1"></script>  
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>css/thread.css?53339df" media="all"/>
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>scp/css/scp.css?53339df" media="all"/>
-    <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill.snow.css?53339df" media="screen"/>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/quill-modern.css?53339df" media="screen"/>
     <link rel="stylesheet" href="<?php echo ROOT_PATH ?>css/typeahead.css?53339df" media="screen"/>
     <link type="text/css" href="<?php echo ROOT_PATH; ?>css/ui-lightness/jquery-ui-1.13.2.custom.min.css?53339df"
@@ -72,7 +76,13 @@ if (osTicket::is_ie())
 
     <?php
     if($ost && ($headers=$ost->getExtraHeaders())) {
-        echo "\n\t".implode("\n\t", $headers)."\n";
+        foreach ($headers as $h) {
+            // FILTER: STOP the old local quill script from loading
+            if (strpos($h, 'quill.min.js') !== false) continue;
+            
+            echo "\n\t" . $h;
+        }
+        echo "\n";
     }
     ?>
 </head>
@@ -111,6 +121,9 @@ if (osTicket::is_ie())
     </script>
     <?php }
     foreach ($ost->getExtraHeaders() as $h) {
+        // FILTER: Do not print the old quill.min.js if osTicket tries to inject it
+        if (strpos($h, 'quill.min.js') !== false) continue;
+        
         if (strpos($h, '<script ') !== false)
             echo $h;
     } ?>

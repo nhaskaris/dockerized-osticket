@@ -246,6 +246,7 @@ class AdminNav extends StaffNav{
                     $subnav[]=array('desc'=>__('Agents'),'href'=>'settings.php?t=agents','iconclass'=>'teams');
                     $subnav[]=array('desc'=>__('Users'),'href'=>'settings.php?t=users','iconclass'=>'groups');
                     $subnav[]=array('desc'=>__('Knowledgebase'),'href'=>'settings.php?t=kb','iconclass'=>'kb-settings');
+                    $subnav[]=array('desc'=>__('Webhooks'),'href'=>'settings.php?t=webhooks','iconclass'=>'api');
                     break;
                 case 'manage':
                     $subnav[]=array('desc'=>__('Help Topics'),'href'=>'helptopics.php','iconclass'=>'helpTopics');

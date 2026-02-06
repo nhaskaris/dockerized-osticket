@@ -117,10 +117,11 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
         </div>
 
         <textarea class="richtext no-bar" name="notes" cols="21"
-            rows="8" style="width: 80%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+            rows="8" style="width: 80%; display: block;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
 
 </div>
 
+<div style="clear: both; height: 60px;"></div>
 <div class="hidden tab_content" id="routing">
 <div style="padding:8px 0;border-bottom: 2px dotted #ddd;">
 <div><b class="big"><?php echo __('New ticket options');?></b></div>
@@ -433,7 +434,7 @@ foreach ($forms as $F) {
 
 </div>
 
-<p style="text-align:center;">
+<p style="text-align:center; position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset');?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel');?>" onclick='window.location.href="helptopics.php"'>

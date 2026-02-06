@@ -191,12 +191,13 @@ $info = Format::htmlchars(($errors && $_POST) ? $_POST : $info, true);
         <tr>
             <td colspan=2>
                 <textarea class="richtext no-bar" name="notes" cols="21"
-                    rows="5" style="width: 60%;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
+                    rows="5" style="width: 60%; display: block;"><?php echo Format::viewableImages($info['notes']); ?></textarea>
             </td>
         </tr>
     </tbody>
 </table>
 </div>
+<div style="clear: both;"></div>
 <?php
 if ($email) { ?>
 <div class="tab_content" id="mailbox" style="display:none;">
@@ -213,7 +214,8 @@ if ($email) { ?>
 </div>
 <?php
 } ?>
-<p style="text-align:center;">
+<div style="clear: both; height: 60px;"></div>
+<p style="text-align:center; position: relative; z-index: 1000; margin-top: 20px;">
     <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset');?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel');?>" onclick='window.location.href="emails.php"'>

@@ -1067,3 +1067,18 @@ CREATE TABLE `%TABLE_PREFIX%user_account` (
   KEY `user_id` (`user_id`),
   UNIQUE KEY `username` (`username`)
 ) DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `%TABLE_PREFIX%webhook`;
+CREATE TABLE `%TABLE_PREFIX%webhook` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `status` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `url` varchar(2048) NOT NULL,
+  `method` varchar(8) NOT NULL DEFAULT 'POST',
+  `headers` text,
+  `timeout` int(10) unsigned NOT NULL DEFAULT '10',
+  `created` datetime NOT NULL,
+  `updated` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `status` (`status`)
+) DEFAULT CHARSET=utf8;

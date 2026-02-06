@@ -8,6 +8,12 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: all 0.2s ease;
     margin: 8px 0;
+/* --- THE FIX START --- */
+    display: block;          /* behave like a block element */
+    clear: both;             /* Push below any floating labels/fields */
+    margin-bottom: 30px;     /* Force 30px of empty space before the Save buttons */
+    position: relative;      /* Ensure it respects page flow */
+    /* --- THE FIX END --- */
 }
 
 .quill-container:hover {
