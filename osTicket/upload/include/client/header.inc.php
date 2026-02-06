@@ -141,6 +141,7 @@ if (osTicket::is_ie())
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/flags.css?53339df"/>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/select2.min.css?53339df"/>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/font-awesome.min.css?53339df"/>
+    <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>assets/default/css/notification.css"/>
 
 
     <!-- Favicons -->
@@ -155,6 +156,7 @@ if (osTicket::is_ie())
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/quill-osticket.js?53339df"></script>
     <script type="text/javascript" src="<?php echo ROOT_PATH; ?>js/select2.min.js?53339df"></script>
+    <script type="text/javascript" src="<?php echo ROOT_PATH; ?>assets/default/js/notification.js"></script>
     <?php
     if($ost && ($headers=$ost->getExtraHeaders())) {
         echo "\n\t".implode("\n\t", $headers)."\n";
@@ -346,9 +348,33 @@ if (osTicket::is_ie())
         </div>
         <div id="content">
          <?php if($errors['err']) { ?>
-            <!-- <div id="msg_error"><?php echo $errors['err']; ?></div> -->
+            <script>
+              (function() {
+                const popup = Notification({ position: 'top-right', duration: 5000 });
+                popup.error({ 
+                  title: '<?php echo __('Error'); ?>',
+                  message: '<?php echo htmlspecialchars(strip_tags($errors['err']), ENT_QUOTES, 'UTF-8'); ?>'
+                });
+              })();
+            </script>
          <?php }elseif($msg) { ?>
-            <div id="msg_notice"><?php echo $msg; ?></div>
+            <script>
+              (function() {
+                const popup = Notification({ position: 'top-right', duration: 5000 });
+                popup.success({ 
+                  title: '<?php echo __('Success'); ?>',
+                  message: '<?php echo htmlspecialchars(strip_tags($msg), ENT_QUOTES, 'UTF-8'); ?>'
+                });
+              })();
+            </script>
          <?php }elseif($warn) { ?>
-            <div id="msg_warning"><?php echo $warn; ?></div>
+            <script>
+              (function() {
+                const popup = Notification({ position: 'top-right', duration: 5000 });
+                popup.warning({ 
+                  title: '<?php echo __('Warning'); ?>',
+                  message: '<?php echo htmlspecialchars(strip_tags($warn), ENT_QUOTES, 'UTF-8'); ?>'
+                });
+              })();
+            </script>
          <?php } ?>

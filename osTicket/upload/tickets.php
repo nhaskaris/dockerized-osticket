@@ -77,8 +77,12 @@ if ($_POST && is_object($ticket) && $ticket->getId()) {
             $errors['err']=__('Access Denied. Possibly invalid ticket ID');
 
         $_POST['message'] = ThreadEntryBody::clean($_POST[$messageField->getFormName()]);
-        if (!$_POST['message'])
+        
+        // Validate message is not empty (check both existence and content)
+        if (!$_POST['message'] || trim(strip_tags($_POST['message'])) === '') {
             $errors['message'] = __('Message required');
+            $errors['err'] = __('Message cannot be empty. Please enter a message before submitting.');
+        }
 
         if(!$errors) {
             //Everything checked out...do the magic.

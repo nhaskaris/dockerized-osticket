@@ -143,11 +143,35 @@ if ($blockReply = $ticket->isChild() && $ticket->getMergeType() != 'visual')
 
   <div class="clear" style="padding-bottom:10px;"></div>
   <?php if($errors['err']) { ?>
-      <div id="msg_error"><?php echo $errors['err']; ?></div>
+      <script>
+        (function() {
+          const popup = Notification({ position: 'top-right', duration: 5000 });
+          popup.error({ 
+            title: '<?php echo __('Error'); ?>',
+            message: '<?php echo htmlspecialchars(strip_tags($errors['err']), ENT_QUOTES, 'UTF-8'); ?>'
+          });
+        })();
+      </script>
   <?php }elseif($msg) { ?>
-      <div id="msg_notice"><?php echo $msg; ?></div>
+      <script>
+        (function() {
+          const popup = Notification({ position: 'top-right', duration: 5000 });
+          popup.success({ 
+            title: '<?php echo __('Success'); ?>',
+            message: '<?php echo htmlspecialchars(strip_tags($msg), ENT_QUOTES, 'UTF-8'); ?>'
+          });
+        })();
+      </script>
   <?php }elseif($warn) { ?>
-      <div id="msg_warning"><?php echo $warn; ?></div>
+      <script>
+        (function() {
+          const popup = Notification({ position: 'top-right', duration: 5000 });
+          popup.warning({ 
+            title: '<?php echo __('Warning'); ?>',
+            message: '<?php echo htmlspecialchars(strip_tags($warn), ENT_QUOTES, 'UTF-8'); ?>'
+          });
+        })();
+      </script>
   <?php }
   if ((!$ticket->isClosed() || $ticket->isReopenable()) && !$blockReply) { ?>
   <form id="reply" action="tickets.php?id=<?php echo $ticket->getId();
@@ -184,6 +208,45 @@ echo $attrs; ?>><?php echo $draft ?: $info['message'];
           <input type="button" value="<?php echo __('Cancel'); ?>" onClick="history.go(-1)">
       </p>
   </form>
+  <script type="text/javascript">
+    (function() {
+      const replyForm = document.getElementById('reply');
+      if (replyForm) {
+        replyForm.addEventListener('submit', function(e) {
+          const messageField = document.querySelector('textarea[name="<?php echo $messageField->getFormName(); ?>"]');
+          if (!messageField) return;
+          
+          // Get the message content
+          let messageContent = messageField.value;
+          
+          // If rich text editor is enabled, get the text content
+          if (typeof messageField.classList !== 'undefined' && messageField.classList.contains('richtext')) {
+            const editor = messageField.closest('.redactor-box');
+            if (editor) {
+              const editorContent = editor.querySelector('.redactor-editor');
+              if (editorContent) {
+                messageContent = editorContent.innerText || editorContent.textContent;
+              }
+            }
+          }
+          
+          // Check if message is empty after stripping HTML and whitespace
+          const strippedContent = messageContent.replace(/<[^>]*>/g, '').trim();
+          
+          if (!strippedContent || strippedContent === '') {
+            e.preventDefault();
+            const popup = Notification({ position: 'top-right', duration: 5000 });
+            popup.error({ 
+              title: '<?php echo __('Error'); ?>',
+              message: '<?php echo __('Message cannot be empty. Please enter a message before submitting.'); ?>'
+            });
+            messageField.focus();
+            return false;
+          }
+        });
+      }
+    })();
+  </script>
   <?php
   } ?>
 </div>

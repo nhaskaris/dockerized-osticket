@@ -4309,7 +4309,16 @@ implements RestrictedAccess, Threadable, Searchable {
             }
         }
 
-
+        // Validate message field is not empty
+        if (isset($vars['message'])) {
+            $messageContent = trim(strip_tags($vars['message']));
+            if (empty($messageContent)) {
+                $errors['message'] = __('Message cannot be empty');
+                if (!isset($errors['err'])) {
+                    $errors['err'] = __('Message cannot be empty. Please enter a message before submitting.');
+                }
+            }
+        }
 
         // Any errors above are fatal.
         if ($errors)
