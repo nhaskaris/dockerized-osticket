@@ -157,6 +157,48 @@ const app = {
             console.log("Restoring Topic:", STATE.topicId);
             this.selectTopic(STATE.topicId, true);
         }
+
+        // Add form validation
+        this.setupFormValidation();
+    },
+
+    setupFormValidation: function() {
+        const form = document.getElementById('ticketForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            const messageField = form.querySelector('textarea[name="message"]');
+            if (!messageField) return;
+
+            // Get the message content
+            let messageContent = messageField.value;
+
+            // If rich text editor is enabled, get the text content
+            if (typeof messageField.classList !== 'undefined' && messageField.classList.contains('richtext')) {
+                const editor = messageField.closest('.redactor-box');
+                if (editor) {
+                    const editorContent = editor.querySelector('.redactor-editor');
+                    if (editorContent) {
+                        messageContent = editorContent.innerText || editorContent.textContent;
+                    }
+                }
+            }
+
+            // Check if message is empty after stripping HTML and whitespace
+            const strippedContent = messageContent.replace(/<[^>]*>/g, '').trim();
+
+            if (!strippedContent || strippedContent === '') {
+                e.preventDefault();
+                const popup = Notification({ position: 'top-right', duration: 5000 });
+                popup.error({ 
+                    title: '<?php echo __('Error'); ?>',
+                    message: '<?php echo __('Message cannot be empty. Please enter a message before submitting.'); ?>'
+                });
+                messageField.focus();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return false;
+            }
+        });
     },
 
     handleSearch: function(query) {
