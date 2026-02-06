@@ -208,6 +208,45 @@ echo $attrs; ?>><?php echo $draft ?: $info['message'];
           <input type="button" value="<?php echo __('Cancel'); ?>" onClick="history.go(-1)">
       </p>
   </form>
+  <script type="text/javascript">
+    (function() {
+      const replyForm = document.getElementById('reply');
+      if (replyForm) {
+        replyForm.addEventListener('submit', function(e) {
+          const messageField = document.querySelector('textarea[name="<?php echo $messageField->getFormName(); ?>"]');
+          if (!messageField) return;
+          
+          // Get the message content
+          let messageContent = messageField.value;
+          
+          // If rich text editor is enabled, get the text content
+          if (typeof messageField.classList !== 'undefined' && messageField.classList.contains('richtext')) {
+            const editor = messageField.closest('.redactor-box');
+            if (editor) {
+              const editorContent = editor.querySelector('.redactor-editor');
+              if (editorContent) {
+                messageContent = editorContent.innerText || editorContent.textContent;
+              }
+            }
+          }
+          
+          // Check if message is empty after stripping HTML and whitespace
+          const strippedContent = messageContent.replace(/<[^>]*>/g, '').trim();
+          
+          if (!strippedContent || strippedContent === '') {
+            e.preventDefault();
+            const popup = Notification({ position: 'top-right', duration: 5000 });
+            popup.error({ 
+              title: '<?php echo __('Error'); ?>',
+              message: '<?php echo __('Message cannot be empty. Please enter a message before submitting.'); ?>'
+            });
+            messageField.focus();
+            return false;
+          }
+        });
+      }
+    })();
+  </script>
   <?php
   } ?>
 </div>
