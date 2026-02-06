@@ -7,6 +7,8 @@ dockerized-osticket
 
 **Quick Start**
 
+### Docker Installation
+
 - **Prerequisites:** Docker and Docker Compose (v2) installed.
 - **Build & run:**
 
@@ -24,6 +26,68 @@ docker compose logs -f
 
 ```bash
 docker compose down
+```
+
+### Manual Installation (Non-Docker)
+
+For traditional LAMP/LEMP server deployments:
+
+1. **Make the script executable:**
+
+```bash
+chmod +x manual-install.sh
+```
+
+2. **Run the installation script as root:**
+
+```bash
+sudo ./manual-install.sh
+```
+
+The script will:
+- Backup your existing osTicket files (config, plugins, languages, attachments)
+- Remove old installation files from `/var/www/html` (or your specified web root)
+- Copy new osTicket files from `osTicket/upload/`
+- Restore your backed-up configuration and data
+- Set proper file permissions
+- Clear cache
+
+**Manual Installation Requirements:**
+- PHP 7.4 or higher
+- MySQL 5.5+ or MariaDB 10.0+
+- Apache or Nginx web server
+- Existing osTicket installation (if upgrading)
+
+**Manual Steps (if not using script):**
+
+```bash
+# 1. Backup existing files
+mkdir -p ~/osticket-backup
+cp /var/www/html/include/ost-config.php ~/osticket-backup/
+cp -r /var/www/html/include/plugins ~/osticket-backup/
+cp -r /var/www/html/include/i18n ~/osticket-backup/
+cp -r /var/www/html/attachments ~/osticket-backup/
+
+# 2. Remove old files
+cd /var/www/html
+sudo rm -rf *
+
+# 3. Copy new files
+cd /path/to/dockerized-osticket
+sudo cp -r osTicket/upload/* /var/www/html/
+
+# 4. Restore backed-up files
+sudo cp ~/osticket-backup/ost-config.php /var/www/html/include/
+sudo cp -r ~/osticket-backup/plugins/* /var/www/html/include/plugins/
+sudo cp -r ~/osticket-backup/i18n/* /var/www/html/include/i18n/
+sudo cp -r ~/osticket-backup/attachments/* /var/www/html/attachments/
+
+# 5. Set permissions (Debian/Ubuntu)
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+sudo chmod -R 777 /var/www/html/attachments
+
+# For CentOS/RHEL use: sudo chown -R apache:apache /var/www/html
 ```
 
 **Project Structure (selected)**
@@ -72,7 +136,4 @@ docker compose up -d --build
 **Contact / Notes**
 
 - For local issues, inspect container logs and webserver error logs under the container. If you want, I can add a troubleshooting container or a small helper script to simplify DB backups and restores.
-
---
-Generated README for this workspace. Edit `README.md` to add project-specific deploy or environment notes.
 
