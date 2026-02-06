@@ -1,0 +1,224 @@
+/* Notification Toaster Styles */
+
+.notification-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.notification-container.notification-top-right {
+  top: 20px;
+  right: 20px;
+  width: 350px;
+}
+
+.notification-container.notification-top-left {
+  top: 20px;
+  left: 20px;
+  width: 350px;
+}
+
+.notification-container.notification-bottom-right {
+  bottom: 20px;
+  right: 20px;
+  width: 350px;
+}
+
+.notification-container.notification-bottom-left {
+  bottom: 20px;
+  left: 20px;
+  width: 350px;
+}
+
+.notification-container.notification-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+}
+
+.notification {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+  padding: 16px;
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+  border-left: 4px solid #2196F3;
+}
+
+.notification.notification-success {
+  border-left-color: #4CAF50;
+  background-color: #f1f8f6;
+}
+
+.notification.notification-success .notification-title {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.notification.notification-success .notification-message {
+  color: #1b5e20;
+}
+
+.notification.notification-error {
+  border-left-color: #f44336;
+  background-color: #fef5f5;
+}
+
+.notification.notification-error .notification-title {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.notification.notification-error .notification-message {
+  color: #b71c1c;
+}
+
+.notification.notification-warning {
+  border-left-color: #ff9800;
+  background-color: #fff8f3;
+}
+
+.notification.notification-warning .notification-title {
+  color: #e65100;
+  font-weight: bold;
+}
+
+.notification.notification-warning .notification-message {
+  color: #bf360c;
+}
+
+.notification.notification-info {
+  border-left-color: #2196F3;
+  background-color: #f3f7ff;
+}
+
+.notification.notification-info .notification-title {
+  color: #1565c0;
+  font-weight: bold;
+}
+
+.notification.notification-info .notification-message {
+  color: #0d47a1;
+}
+
+.notification.notification-dialog {
+  border-left-color: #2196F3;
+  background-color: #fff;
+  width: 400px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+}
+
+.notification-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.notification-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notification-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-close:hover {
+  color: #333;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.notification-actions button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.notification-actions .btn-ok {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+}
+
+.notification-actions .btn-ok:hover {
+  background: #1976D2;
+}
+
+.notification-actions .btn-cancel {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.notification-actions .btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-container.notification-top-left .notification {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.notification.fade-out {
+  animation: fadeOut 0.3s ease-in;
+}
