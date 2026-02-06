@@ -3140,6 +3140,65 @@ implements RestrictedAccess, Threadable, Searchable {
 
         $ticket->setLastMessage($message);
 
+        // WEBHOOK: Trigger on client reply
+        if ($message->getUserId() == $ticket->getUserId()) {
+            global $cfg;
+            
+            // Check if webhooks are enabled
+            if ($cfg->get('webhook_enabled') && $cfg->get('webhook_event_client_reply')) {
+                $webhookUrl = $cfg->get('webhook_url');
+                
+                if ($webhookUrl) {
+                    // Prepare webhook payload
+                    $cleanMessage = strip_tags($message->getBody()->getClean());
+                    
+                    $payload = array(
+                        'event'       => 'client_reply',
+                        'ticket_id'   => $ticket->getNumber(),
+                        'internal_id' => $ticket->getId(),
+                        'user'        => $ticket->getName(),
+                        'email'       => $ticket->getEmail(),
+                        'subject'     => $ticket->getSubject(),
+                        'message'     => substr($cleanMessage, 0, 500),
+                        'timestamp'   => date('c'),
+                        'ticket_url'  => $cfg->getBaseUrl() . 'scp/tickets.php?id=' . $ticket->getId()
+                    );
+
+                    // Send webhook
+                    $ch = curl_init($webhookUrl);
+                    $jsonData = json_encode($payload);
+                    
+                    $headers = array('Content-Type: application/json');
+                    
+                    // Add custom headers if configured
+                    if ($customHeaders = $cfg->get('webhook_headers')) {
+                        $headerLines = explode("\n", $customHeaders);
+                        foreach ($headerLines as $header) {
+                            $header = trim($header);
+                            if ($header) {
+                                $headers[] = $header;
+                            }
+                        }
+                    }
+                    
+                    // Add signature if secret is configured
+                    if ($secret = $cfg->get('webhook_secret')) {
+                        $signature = hash_hmac('sha256', $jsonData, $secret);
+                        $headers[] = 'X-Webhook-Signature: sha256=' . $signature;
+                    }
+
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, $cfg->get('webhook_timeout') ?: 10);
+                    
+                    curl_exec($ch);
+                    curl_close($ch);
+                }
+            }
+        }
+
         // Add email recipients as collaborators...
         if ($vars['recipients']
             && (strtolower($origin) != 'email' || ($cfg && $cfg->addCollabsViaEmail()))

@@ -1262,6 +1262,9 @@ class OsticketConfig extends Config {
             case 'kb':
                 return $this->updateKBSettings($vars, $errors);
                 break;
+            case 'webhooks':
+                return $this->updateWebhookSettings($vars, $errors);
+                break;
             default:
                 $errors['err']=sprintf('%s - %s', __('Unknown setting option'), __('Get technical help!'));
         }
@@ -1735,6 +1738,21 @@ class OsticketConfig extends Config {
         ));
     }
 
+    function updateWebhookSettings($vars, &$errors) {
+        if ($errors) return false;
+
+        return $this->updateAll(array(
+            'webhook_enabled'=>isset($vars['webhook_enabled'])?1:0,
+            'webhook_url'=>$vars['webhook_url'],
+            'webhook_secret'=>$vars['webhook_secret'],
+            'webhook_headers'=>$vars['webhook_headers'],
+            'webhook_timeout'=>$vars['webhook_timeout'],
+            'webhook_event_client_reply'=>isset($vars['webhook_event_client_reply'])?1:0,
+            'webhook_event_new_ticket'=>isset($vars['webhook_event_new_ticket'])?1:0,
+            'webhook_event_ticket_closed'=>isset($vars['webhook_event_ticket_closed'])?1:0,
+            'webhook_event_staff_reply'=>isset($vars['webhook_event_staff_reply'])?1:0,
+        ));
+    }
 
     function updateAlertsSettings($vars, &$errors) {
 

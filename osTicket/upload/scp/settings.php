@@ -31,6 +31,8 @@ $settingOptions=array(
         array(__('Site Pages'), 'settings.pages'),
     'kb' =>
         array(__('Knowledgebase Settings'), 'settings.kb'),
+    'webhooks' =>
+        array(__('Webhook Settings'), 'settings.webhooks'),
 );
 //Handle a POST.
 $target=(isset($_REQUEST['t']) && $settingOptions[$_REQUEST['t']])?$_REQUEST['t']:'system';
