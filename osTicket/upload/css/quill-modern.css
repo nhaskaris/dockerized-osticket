@@ -13,6 +13,7 @@
     clear: both;             /* Push below any floating labels/fields */
     margin-bottom: 30px;     /* Force 30px of empty space before the Save buttons */
     position: relative;      /* Ensure it respects page flow */
+    z-index: auto;           /* Lower than toolbar */
     /* --- THE FIX END --- */
 }
 
@@ -38,7 +39,7 @@
     flex-wrap: wrap !important;
     gap: 4px !important;
     position: relative !important;
-    z-index: 1000 !important;
+    z-index: 2 !important;
 }
 
 /* Toolbar Buttons */
