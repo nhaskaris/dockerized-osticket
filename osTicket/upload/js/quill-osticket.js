@@ -238,6 +238,14 @@
             // Strict check to prevent double-init
             if (!quillInstances.has(el) && !$el.data('quill')) {
                 $el.quill();
+                
+                // If this form has canned responses, unbind the original scp.js handler
+                const $form = $el.closest('form');
+                const $cannedSelect = $form.find('select#cannedResp');
+                if ($cannedSelect.length) {
+                    // Unbind the original change handler from scp.js
+                    $cannedSelect.off('change');
+                }
             }
         });
     }
@@ -246,6 +254,18 @@
     $(function() {
         // 1. Initial Load
         findRichtextBoxes();
+        
+        // Unbind scp.js handlers after it has loaded (use setTimeout to ensure it runs after scp.js)
+        setTimeout(function() {
+            $('form select#cannedResp').each(function() {
+                var $form = $(this).closest('form');
+                var $box = $('.richtext', $form);
+                if ($box.data('quillInstance')) {
+                    // Unbind the scp.js handler if Quill is active
+                    $(this).off('change');
+                }
+            });
+        }, 100);
         
         // 2. Re-init after standard AJAX (e.g. Help Topic change)
         $(document).ajaxStop(function() {
@@ -258,7 +278,7 @@
         });
 
         // 4. Handle Canned Response Selection (Save Cursor)
-        $(document).on('select2:opening', 'form select#cannedResp', function (e) {
+        $(document).on('select2:opening.quill', 'form select#cannedResp', function (e) {
             var $box = $('.richtext', $(this).closest('form'));
             var quill = $box.data('quillInstance');
             
@@ -273,25 +293,46 @@
         });
 
         // 5. Handle Canned Response Insertion (Paste Text)
-        $(document).on('change', 'form select#cannedResp', function() {
+        // Use namespace to prevent multiple bindings
+        $(document).off('change.quill', 'form select#cannedResp');
+        $(document).on('change.quill', 'form select#cannedResp', function(e) {
             var $this = $(this);
             var $form = $this.closest('form');
             var $box = $('.richtext', $form);
             var quill = $box.data('quillInstance');
             var selectedId = $this.val();
 
-            if (quill && selectedId > 0) {
+            // Only handle if Quill is active on this form
+            if (!quill) {
+                return;
+            }
+            
+            // Stop all other handlers from firing
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            if (selectedId > 0) {
+                // Determine correct URL - use ticket-specific endpoint if ticket ID exists
+                var tid = $(':input[name=id]', $form).val();
+                var url = 'ajax.php/kb/canned-response/' + selectedId + '.json';
+                if (tid) {
+                    url = 'ajax.php/tickets/' + tid + '/canned-resp/' + selectedId + '.json';
+                }
+                
+                // Reset dropdown to first option
+                $this.find('option:first').attr('selected', 'selected');
+                
                 $.ajax({
-                    url: 'ajax.php/kb/canned-response/' + selectedId + '.json',
+                    type: 'GET',
+                    url: url,
                     dataType: 'json',
+                    cache: false,
                     success: function(data) {
                         if (data && data.response) {
                             var index = $box.data('savedSelection') || 0;
                             // Insert text at saved cursor position
                             quill.clipboard.dangerouslyPasteHTML(index, data.response);
-                            // Move cursor to end of inserted text
-                            // Note: This is an approximation; perfect cursor placement requires more logic, 
-                            // but this is standard for osTicket adapters.
+                            $box.val(quill.root.innerHTML);
                         }
                     }
                 });
