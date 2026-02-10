@@ -12,14 +12,16 @@
         [{ 'indent': '-1'}, { 'indent': '+1' }],
         ['blockquote', 'code-block'],
         ['link', 'image', 'video'],
-        ['clean']
+        ['clean'],
+        ['html-editor', 'save-draft', 'clear-draft']
     ];
 
     const TOOLBAR_SIMPLE = [
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         ['link', 'image'],
-        ['clean']
+        ['clean'],
+        ['html-editor', 'save-draft', 'clear-draft']
     ];
 
     // Store Quill instances
@@ -70,6 +72,125 @@
             // Set min-height
             $container.find('.ql-editor').css('min-height', minHeight);
 
+            // Add HTML editor functionality
+            const toolbar_el = $container.prev('.ql-toolbar');
+            const htmlButton = toolbar_el.find('.ql-html-editor');
+            const saveDraftButton = toolbar_el.find('.ql-save-draft');
+            const clearDraftButton = toolbar_el.find('.ql-clear-draft');
+            
+            // Generate unique storage key based on textarea name/id
+            const storageKey = 'quill_draft_' + ($textarea.attr('name') || $textarea.attr('id') || 'unnamed_' + Date.now());
+            
+            // Load saved draft on initialization
+            const savedDraft = localStorage.getItem(storageKey);
+            if (savedDraft) {
+                quill.clipboard.dangerouslyPasteHTML(savedDraft);
+                $textarea.val(savedDraft);
+                // Visual indicator that draft was loaded
+                saveDraftButton.addClass('ql-draft-loaded');
+                setTimeout(function() {
+                    saveDraftButton.removeClass('ql-draft-loaded');
+                }, 2000);
+            }
+            
+            // Save Draft Button
+            if (saveDraftButton.length) {
+                saveDraftButton.html('<svg viewBox="0 0 18 18"><path class="ql-stroke" d="M3 3 L3 15 L15 15 L15 6 L12 3 Z M6 3 L6 6 L12 6 L12 3"></path><rect class="ql-fill" x="6" y="10" width="6" height="3"></rect><circle class="ql-fill" cx="9" cy="11.5" r="0.8"></circle></svg>');
+                saveDraftButton.attr('title', 'Save draft to browser');
+                
+                saveDraftButton.on('click', function(e) {
+                    e.preventDefault();
+                    const currentHTML = quill.root.innerHTML;
+                    localStorage.setItem(storageKey, currentHTML);
+                    
+                    // Show checkmark feedback
+                    const originalHTML = saveDraftButton.html();
+                    saveDraftButton.html('<svg viewBox="0 0 18 18"><polyline class="ql-stroke" points="3,9 7,13 15,5" stroke-width="2" fill="none"></polyline></svg>');
+                    saveDraftButton.css('color', '#22c55e');
+                    
+                    setTimeout(function() {
+                        saveDraftButton.html(originalHTML);
+                        saveDraftButton.css('color', '');
+                    }, 800);
+                });
+            }
+            
+            // Clear Draft Button
+            if (clearDraftButton.length) {
+                clearDraftButton.html('<svg viewBox="0 0 18 18"><polyline class="ql-stroke" points="3 6 4 6 15 6"></polyline><path class="ql-stroke" d="M6,6 L6,4 L12,4 L12,6 M5,6 L5,15 C5,15.5 5.5,16 6,16 L12,16 C12.5,16 13,15.5 13,15 L13,6"></path><line class="ql-stroke" x1="8" y1="9" x2="8" y2="13"></line><line class="ql-stroke" x1="10" y1="9" x2="10" y2="13"></line></svg>');
+                clearDraftButton.attr('title', 'Clear saved draft');
+                
+                clearDraftButton.on('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem(storageKey);
+                    
+                    // Show X feedback
+                    const originalHTML = clearDraftButton.html();
+                    clearDraftButton.html('<svg viewBox="0 0 18 18"><line class="ql-stroke" x1="5" y1="5" x2="13" y2="13" stroke-width="2"></line><line class="ql-stroke" x1="13" y1="5" x2="5" y2="13" stroke-width="2"></line></svg>');
+                    clearDraftButton.css('color', '#ef4444');
+                    
+                    setTimeout(function() {
+                        clearDraftButton.html(originalHTML);
+                        clearDraftButton.css('color', '');
+                    }, 800);
+                });
+            }
+            
+            // HTML Editor Button
+            if (htmlButton.length) {
+                htmlButton.html('<span style="font-size: 11px; font-weight: 600; font-family: monospace;">HTML</span>');
+                htmlButton.attr('title', 'Toggle HTML editor');
+                
+                let htmlMode = false;
+                let htmlTextarea = null;
+                
+                htmlButton.on('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (!htmlMode) {
+                        // Switch to HTML mode
+                        const currentHTML = quill.root.innerHTML;
+                        
+                        // Create HTML textarea
+                        htmlTextarea = $('<textarea class="html-editor-textarea"></textarea>');
+                        htmlTextarea.css({
+                            'width': '100%',
+                            'min-height': minHeight,
+                            'padding': '12px',
+                            'font-family': 'Consolas, Monaco, monospace',
+                            'font-size': '13px',
+                            'border': '1px solid #ccc',
+                            'border-radius': '0 0 8px 8px',
+                            'background': '#f9f9f9',
+                            'color': '#333',
+                            'resize': 'vertical'
+                        });
+                        htmlTextarea.val(currentHTML);
+                        
+                        // Hide editor, show textarea
+                        $container.find('.ql-editor').hide();
+                        $container.find('.ql-clipboard').hide();
+                        $container.append(htmlTextarea);
+                        
+                        htmlButton.addClass('ql-active');
+                        htmlMode = true;
+                    } else {
+                        // Switch back to visual mode
+                        const updatedHTML = htmlTextarea.val();
+                        quill.clipboard.dangerouslyPasteHTML(updatedHTML);
+                        $textarea.val(updatedHTML);
+                        
+                        // Remove textarea, show editor
+                        htmlTextarea.remove();
+                        $container.find('.ql-editor').show();
+                        $container.find('.ql-clipboard').show();
+                        
+                        htmlButton.removeClass('ql-active');
+                        htmlMode = false;
+                    }
+                });
+            }
+
             // Load initial content from textarea
             if ($textarea.val()) {
                 quill.clipboard.dangerouslyPasteHTML($textarea.val());
@@ -117,6 +238,14 @@
             // Strict check to prevent double-init
             if (!quillInstances.has(el) && !$el.data('quill')) {
                 $el.quill();
+                
+                // If this form has canned responses, unbind the original scp.js handler
+                const $form = $el.closest('form');
+                const $cannedSelect = $form.find('select#cannedResp');
+                if ($cannedSelect.length) {
+                    // Unbind the original change handler from scp.js
+                    $cannedSelect.off('change');
+                }
             }
         });
     }
@@ -125,6 +254,18 @@
     $(function() {
         // 1. Initial Load
         findRichtextBoxes();
+        
+        // Unbind scp.js handlers after it has loaded (use setTimeout to ensure it runs after scp.js)
+        setTimeout(function() {
+            $('form select#cannedResp').each(function() {
+                var $form = $(this).closest('form');
+                var $box = $('.richtext', $form);
+                if ($box.data('quillInstance')) {
+                    // Unbind the scp.js handler if Quill is active
+                    $(this).off('change');
+                }
+            });
+        }, 100);
         
         // 2. Re-init after standard AJAX (e.g. Help Topic change)
         $(document).ajaxStop(function() {
@@ -137,7 +278,7 @@
         });
 
         // 4. Handle Canned Response Selection (Save Cursor)
-        $(document).on('select2:opening', 'form select#cannedResp', function (e) {
+        $(document).on('select2:opening.quill', 'form select#cannedResp', function (e) {
             var $box = $('.richtext', $(this).closest('form'));
             var quill = $box.data('quillInstance');
             
@@ -152,25 +293,46 @@
         });
 
         // 5. Handle Canned Response Insertion (Paste Text)
-        $(document).on('change', 'form select#cannedResp', function() {
+        // Use namespace to prevent multiple bindings
+        $(document).off('change.quill', 'form select#cannedResp');
+        $(document).on('change.quill', 'form select#cannedResp', function(e) {
             var $this = $(this);
             var $form = $this.closest('form');
             var $box = $('.richtext', $form);
             var quill = $box.data('quillInstance');
             var selectedId = $this.val();
 
-            if (quill && selectedId > 0) {
+            // Only handle if Quill is active on this form
+            if (!quill) {
+                return;
+            }
+            
+            // Stop all other handlers from firing
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            if (selectedId > 0) {
+                // Determine correct URL - use ticket-specific endpoint if ticket ID exists
+                var tid = $(':input[name=id]', $form).val();
+                var url = 'ajax.php/kb/canned-response/' + selectedId + '.json';
+                if (tid) {
+                    url = 'ajax.php/tickets/' + tid + '/canned-resp/' + selectedId + '.json';
+                }
+                
+                // Reset dropdown to first option
+                $this.find('option:first').attr('selected', 'selected');
+                
                 $.ajax({
-                    url: 'ajax.php/kb/canned-response/' + selectedId + '.json',
+                    type: 'GET',
+                    url: url,
                     dataType: 'json',
+                    cache: false,
                     success: function(data) {
                         if (data && data.response) {
                             var index = $box.data('savedSelection') || 0;
                             // Insert text at saved cursor position
                             quill.clipboard.dangerouslyPasteHTML(index, data.response);
-                            // Move cursor to end of inserted text
-                            // Note: This is an approximation; perfect cursor placement requires more logic, 
-                            // but this is standard for osTicket adapters.
+                            $box.val(quill.root.innerHTML);
                         }
                     }
                 });

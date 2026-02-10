@@ -13,6 +13,7 @@
     clear: both;             /* Push below any floating labels/fields */
     margin-bottom: 30px;     /* Force 30px of empty space before the Save buttons */
     position: relative;      /* Ensure it respects page flow */
+    z-index: auto;           /* Lower than toolbar */
     /* --- THE FIX END --- */
 }
 
@@ -37,6 +38,8 @@
     align-items: center !important;
     flex-wrap: wrap !important;
     gap: 4px !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
 /* Toolbar Buttons */
@@ -169,6 +172,12 @@
     color: var(--primary-color, #4f7cf2) !important;
 }
 
+/* Quill Container - size to content */
+.ql-container {
+    min-height: auto !important;
+    height: auto !important;
+}
+
 /* Editor Content Area */
 .ql-editor {
     background: #fff !important;
@@ -179,6 +188,11 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     border: none !important;
     outline: none !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    min-height: 100px !important;
+    height: auto !important;
 }
 
 .ql-editor:focus {
@@ -412,4 +426,62 @@
 
 .ql-editor::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
+}
+
+/* HTML Editor Button */
+.ql-toolbar button.ql-html-editor {
+    min-width: 45px !important;
+    width: auto !important;
+    padding: 6px 8px !important;
+}
+
+.ql-toolbar button.ql-html-editor span {
+    color: #4a5568 !important;
+}
+
+.ql-toolbar button.ql-html-editor:hover span {
+    color: #2d3748 !important;
+}
+
+.ql-toolbar button.ql-html-editor.ql-active {
+    background: #4f7cf2 !important;
+    border-color: #4f7cf2 !important;
+}
+
+.ql-toolbar button.ql-html-editor.ql-active span {
+    color: #fff !important;
+}
+
+/* Save Draft Button */
+.ql-toolbar button.ql-save-draft svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Clear Draft Button */
+.ql-toolbar button.ql-clear-draft svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* HTML Editor Textarea */
+.html-editor-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    border: none;
+    border-radius: 0 0 8px 8px;
+    background: #f9f9f9;
+    color: #333;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.html-editor-textarea:focus {
+    background: #fff;
+    outline: 2px solid rgba(79, 124, 242, 0.2);
 }
