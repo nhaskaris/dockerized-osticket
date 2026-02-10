@@ -60,42 +60,15 @@ class TurnstileField extends FormField {
 
     function getConfigurationOptions() {
         return array(
-            'theme' => new ChoiceField(array(
-                'label' => 'Theme',
-                'choices' => array('light' => 'Light', 'dark' => 'Dark', 'auto' => 'Auto'),
-                'default' => 'auto',
-            )),
-            'size' => new ChoiceField(array(
-                'label' => 'Widget Size',
-                'choices' => array('normal' => 'Normal', 'flexible' => 'Flexible', 'compact' => 'Compact'),
-                'default' => 'normal',
-            )),
-            'appearance' => new ChoiceField(array(
-                'label' => 'Appearance Mode',
+            'mode' => new ChoiceField(array(
+                'label' => 'Turnstile Mode Preset',
+                'hint' => 'Select the same mode configured for your widget in Cloudflare.',
                 'choices' => array(
-                    'always' => 'Always',
-                    'execute' => 'Execute',
-                    'interaction-only' => 'Interaction Only'
+                    'managed' => 'Managed (recommended)',
+                    'non-interactive' => 'Non-Interactive',
+                    'invisible' => 'Invisible'
                 ),
-                'default' => 'always',
-            )),
-            'execution' => new ChoiceField(array(
-                'label' => 'Execution Mode',
-                'choices' => array(
-                    'render' => 'Render',
-                    'execute' => 'Execute'
-                ),
-                'default' => 'render',
-            )),
-            'action' => new TextboxField(array(
-                'label' => 'Action (optional)',
-                'required' => false,
-                'configuration' => array('size'=>30, 'length'=>120, 'autocomplete'=>'off'),
-            )),
-            'cdata' => new TextboxField(array(
-                'label' => 'Customer Data (optional)',
-                'required' => false,
-                'configuration' => array('size'=>30, 'length'=>120, 'autocomplete'=>'off'),
+                'default' => 'managed',
             )),
         );
     }
@@ -104,15 +77,46 @@ class TurnstileField extends FormField {
 class TurnstileWidget extends Widget {
     function render() {
         $fconfig = $this->field->getConfiguration();
+
+        $presets = array(
+            'managed' => array(
+                'theme' => 'auto',
+                'size' => 'normal',
+                'appearance' => 'always',
+                'execution' => 'render',
+            ),
+            'non-interactive' => array(
+                'theme' => 'auto',
+                'size' => 'normal',
+                'appearance' => 'always',
+                'execution' => 'render',
+            ),
+            'invisible' => array(
+                'theme' => 'auto',
+                'size' => 'normal',
+                'appearance' => 'execute',
+                'execution' => 'render',
+            ),
+        );
+
+        $mode = $fconfig['mode'] ?? 'managed';
+        if (!isset($presets[$mode])) {
+            $mode = 'managed';
+        }
+
+        $theme = $fconfig['theme'] ?? $presets[$mode]['theme'];
+        $size = $fconfig['size'] ?? $presets[$mode]['size'];
+        $appearance = $fconfig['appearance'] ?? $presets[$mode]['appearance'];
+        $execution = $fconfig['execution'] ?? $presets[$mode]['execution'];
         ?>
         <div 
             id="<?php echo $this->id; ?>" 
             class="cf-turnstile" 
             data-sitekey="<?php echo TurnstileField::$cf_site_key; ?>" 
-            data-theme="<?php echo $fconfig['theme'] ?: 'auto'; ?>" 
-            data-size="<?php echo $fconfig['size'] ?: 'normal'; ?>"
-            data-appearance="<?php echo $fconfig['appearance'] ?: 'always'; ?>"
-            data-execution="<?php echo $fconfig['execution'] ?: 'render'; ?>"
+            data-theme="<?php echo $theme ?: 'auto'; ?>" 
+            data-size="<?php echo $size ?: 'normal'; ?>"
+            data-appearance="<?php echo $appearance ?: 'always'; ?>"
+            data-execution="<?php echo $execution ?: 'render'; ?>"
             <?php if (!empty($fconfig['action'])) { ?>data-action="<?php echo $fconfig['action']; ?>"<?php } ?>
             <?php if (!empty($fconfig['cdata'])) { ?>data-cdata="<?php echo $fconfig['cdata']; ?>"<?php } ?>
         >
