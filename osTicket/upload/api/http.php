@@ -10,7 +10,9 @@ $dispatcher = patterns('',
     
     url_get("^/filters(?:\.(?P<format>json))?$", array('filters.php:FilterApiController','getList')),
     url_post("^/filters(?:\.(?P<format>json))?$", array('filters.php:FilterApiController','create')),
+    url_put("^/filters/(?P<id>\d+)$", array('filters.php:FilterApiController','update')),
     url_delete("^/filters/(?P<id>\d+)(?:\.(?P<format>json))?$", array('filters.php:FilterApiController','delete')),
+    url_get("^/filters/fields$", array('filters.php:FilterApiController','getFields')),
 
     url('^/tasks/', patterns('',
         url_post("^cron$", array('api.cron.php:CronApiController', 'execute'))
