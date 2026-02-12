@@ -65,7 +65,7 @@ echo -e "${YELLOW}This script will:${NC}"
 echo "  1. Backup existing osTicket files to: $BACKUP_DIR"
 echo "  2. Remove all files from: $WEB_ROOT"
 echo "  3. Copy new osTicket files from: $SCRIPT_DIR/osTicket/upload"
-echo "  4. Restore configuration and plugins"
+echo "  4. Restore configuration, plugins, and images"
 echo ""
 echo -e "${RED}WARNING: This will delete all files in $WEB_ROOT${NC}"
 echo -e "${YELLOW}Do you want to continue? (yes/no):${NC}"
@@ -116,6 +116,15 @@ else
     echo "  ⚠ No attachments directory found"
 fi
 
+# --- NEW: Backup Images ---
+if [ -d "$WEB_ROOT/images" ]; then
+    cp -r "$WEB_ROOT/images" "$BACKUP_DIR/"
+    echo "  ✓ Backed up images/"
+else
+    echo "  ⚠ No images directory found"
+fi
+# ---------------------------
+
 # Step 3: Remove old files
 echo -e "${YELLOW}[3/7] Removing old installation files...${NC}"
 rm -rf "${WEB_ROOT:?}"/*
@@ -127,7 +136,7 @@ cp -r "$SCRIPT_DIR/osTicket/upload/"* "$WEB_ROOT/"
 echo "  ✓ New files copied"
 
 # Step 5: Restore backed-up files
-echo -e "${YELLOW}[5/7] Restoring configuration and plugins...${NC}"
+echo -e "${YELLOW}[5/7] Restoring configuration, plugins, and images...${NC}"
 
 if [ -f "$BACKUP_DIR/ost-config.php" ]; then
     cp "$BACKUP_DIR/ost-config.php" "$WEB_ROOT/include/"
@@ -149,14 +158,35 @@ if [ -d "$BACKUP_DIR/attachments" ]; then
     echo "  ✓ Restored attachments/"
 fi
 
+# --- NEW: Restore Images ---
+if [ -d "$BACKUP_DIR/images" ]; then
+    cp -r "$BACKUP_DIR/images/"* "$WEB_ROOT/images/"
+    echo "  ✓ Restored images/"
+fi
+# ---------------------------
+
 # Step 6: Set permissions
 echo -e "${YELLOW}[6/7] Setting file permissions...${NC}"
 chown -R "$WEB_USER:$WEB_GROUP" "$WEB_ROOT"
+
+# Set base permissions for the whole site
 chmod -R 755 "$WEB_ROOT"
 chmod -R 777 "$WEB_ROOT/attachments"
+
 if [ -f "$WEB_ROOT/include/ost-config.php" ]; then
     chmod 644 "$WEB_ROOT/include/ost-config.php"
 fi
+
+# --- NEW: Fix Image Permissions ---
+if [ -d "$WEB_ROOT/images" ]; then
+    # Directories must be 755 to be accessible
+    find "$WEB_ROOT/images" -type d -exec chmod 755 {} \;
+    # Files inside are set to 644
+    find "$WEB_ROOT/images" -type f -exec chmod 644 {} \;
+    echo "  ✓ Images permissions set (Dirs: 755, Files: 644)"
+fi
+# ----------------------------------
+
 echo "  ✓ Permissions set (Owner: $WEB_USER:$WEB_GROUP)"
 
 # Step 7: Clear cache
