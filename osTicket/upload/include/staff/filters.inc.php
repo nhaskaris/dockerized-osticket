@@ -2,12 +2,22 @@
 if(!defined('OSTADMININC') || !$thisstaff->isAdmin()) die('Access Denied');
 $targets = Filter::getTargets();
 $qs = array();
+
+// Search functionality
+$search = '';
+$search_query = '';
+if(isset($_REQUEST['search']) && ($query = trim($_REQUEST['search']))) {
+    $search = db_real_escape($query);
+    $qs['search'] = $query;
+    $search_query = " AND (filter.`name` LIKE '%$search%' OR filter.`notes` LIKE '%$search%')";
+}
+
 $sql='SELECT filter.*,count(rule.id) as rules, topic.configuration AS topic, dept.configuration AS dept '.
      'FROM '.FILTER_TABLE.' filter '.
      'LEFT JOIN '.FILTER_RULE_TABLE.' rule ON(rule.filter_id=filter.id) '.
      'LEFT JOIN '.FILTER_ACTION_TABLE.' topic ON (topic.filter_id = filter.id AND topic.type = \'topic\') '.
      'LEFT JOIN '.FILTER_ACTION_TABLE.' dept ON (dept.filter_id = filter.id AND dept.type = \'dept\') '.
-     "WHERE filter.`name` <> 'SYSTEM BAN LIST' ".
+     "WHERE filter.`name` <> 'SYSTEM BAN LIST' $search_query ".
      'GROUP BY filter.id';
 $sortOptions=array('name'=>'filter.name','status'=>'filter.isactive','order'=>'filter.execorder','rules'=>'rules',
                    'target'=>'filter.target', 'created'=>'filter.created','updated'=>'filter.updated');
@@ -46,7 +56,6 @@ else
     $showing=__('No filters found');
 
 ?>
-<form action="filters.php" method="POST" name="filters">
 <div class="sticky bar opaque">
     <div class="content">
         <div class="pull-left flush-left">
@@ -84,6 +93,27 @@ else
     </div>
 </div>
 <div class="clear"></div>
+<div style="margin-bottom:10px; padding: 5px 10px;">
+    <form method="GET" action="filters.php" style="margin:0;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" 
+                   name="search" 
+                   id="filter-search" 
+                   value="<?php echo Format::htmlchars($_REQUEST['search'] ?? ''); ?>" 
+                   placeholder="<?php echo __('Search filters by name or notes...'); ?>" 
+                   style="flex:1; padding:5px 10px; border:1px solid #ccc; border-radius:3px;">
+            <button type="submit" class="button" style="padding:5px 15px;">
+                <i class="icon-search"></i> <?php echo __('Search'); ?>
+            </button>
+            <?php if(!empty($_REQUEST['search'])): ?>
+                <a href="filters.php" class="button" style="padding:5px 15px;">
+                    <i class="icon-remove"></i> <?php echo __('Clear'); ?>
+                </a>
+            <?php endif; ?>
+        </div>
+    </form>
+</div>
+<form action="filters.php" method="POST" name="filters">
  <?php csrf_token(); ?>
  <input type="hidden" name="do" value="mass_process" >
 <input type="hidden" id="action" name="a" value="" >
