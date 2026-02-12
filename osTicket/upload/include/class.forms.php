@@ -5232,11 +5232,12 @@ class ThreadEntryWidget extends Widget {
         }
 
         list($draft, $attrs) = Draft::getDraftAndDataAttrs($namespace, $object_id, $this->value);
+        global $thisstaff;
         ?>
         <textarea name="<?php echo $this->name; ?>"
             placeholder="<?php echo Format::htmlchars($this->field->get('placeholder')); ?>"
             class="<?php if ($config['html']) echo 'richtext';
-                ?> draft draft-delete" <?php echo $attrs; ?>
+                ?> draft<?php if ($thisstaff && $thisstaff->isAdmin()) echo ' draft-delete'; ?>" <?php echo $attrs; ?>
             cols="21" rows="8" style="width:100%; box-sizing: border-box;"><?php echo
             ThreadEntryBody::clean($this->value ?: $draft); ?></textarea>
     <?php

@@ -12,11 +12,30 @@
         [{ 'indent': '-1'}, { 'indent': '+1' }],
         ['blockquote', 'code-block'],
         ['link', 'image', 'video'],
+        ['clean']
+    ];
+
+    const TOOLBAR_FULL_WITH_DRAFT = [
+        [{ 'header': [1, 2, 3, false] }],
+        [{ 'font': [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'video'],
         ['clean'],
         ['html-editor', 'save-draft', 'clear-draft']
     ];
 
     const TOOLBAR_SIMPLE = [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+    ];
+
+    const TOOLBAR_SIMPLE_WITH_DRAFT = [
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         ['link', 'image'],
@@ -42,7 +61,15 @@
 
             // Determine toolbar type and size
             const isSimple = $textarea.hasClass('no-bar');
-            const toolbar = isSimple ? TOOLBAR_SIMPLE : TOOLBAR_FULL;
+            const hasDraftDelete = $textarea.hasClass('draft-delete');
+            
+            // Choose toolbar based on type and draft capabilities
+            let toolbar;
+            if (isSimple) {
+                toolbar = hasDraftDelete ? TOOLBAR_SIMPLE_WITH_DRAFT : TOOLBAR_SIMPLE;
+            } else {
+                toolbar = hasDraftDelete ? TOOLBAR_FULL_WITH_DRAFT : TOOLBAR_FULL;
+            }
             
             let minHeight = '150px';
             if ($textarea.hasClass('small')) minHeight = '75px';
