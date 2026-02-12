@@ -53,6 +53,9 @@ if ($user && $_POST) {
         Http::redirect('tickets.php');
 }
 elseif ($_POST) {
+    // DEBUG: Log start
+    error_log("Profile Debug: Starting registration...");
+
     $user_form = UserForm::getUserForm()->getForm($_POST);
     if ($thisclient) {
         $user_form->getField('email')->configure('disabled', true);
@@ -63,21 +66,30 @@ elseif ($_POST) {
     if (!$user_form->isValid(function($f) { return $f->isVisibleToUsers(); })) {
         $errors = array_merge($errors, $user_form->errors());
         $errors['err'] = __('Incomplete client information');
+        error_log("Profile Debug: Form invalid. " . print_r($user_form->errors(), true));
     }
-    elseif (!$_POST['backend'] && !$_POST['passwd1'])
+    elseif (!$_POST['backend'] && !$_POST['passwd1']) {
         $errors['passwd1'] = __('New password is required');
-    elseif (!$_POST['backend'] && $_POST['passwd2'] != $_POST['passwd1'])
+        error_log("Profile Debug: Password missing (Local user).");
+    }
+    elseif (!$_POST['backend'] && $_POST['passwd2'] != $_POST['passwd1']) {
         $errors['passwd1'] = __('Passwords do not match');
-    else {
+        error_log("Profile Debug: Password mismatch.");
+    }
+    // FIX: Only check password complexity if NOT using LDAP/Backend
+    elseif (!$_POST['backend']) {
         try {
             UserAccount::checkPassword($_POST['passwd1']);
         } catch (BadPassword $ex) {
              $errors['passwd1'] = $ex->getMessage();
+             error_log("Profile Debug: Password complexity failed: " . $ex->getMessage());
         }
     }
 
-    if ($errors)
+    if ($errors) {
         $errors['err'] = $errors['err'] ?: __('Unable to register account. See messages below');
+        error_log("Profile Debug: Stopping due to errors: " . print_r($errors, true));
+    }
     // XXX: The email will always be in use already if a guest is logged in
     // and is registering for an account. Instead,
     elseif (($addr = $user_form->getField('email')->getClean())
@@ -87,11 +99,14 @@ elseif ($_POST) {
             '<a href="login.php?e='.urlencode($addr).'" style="color:inherit"><strong>',
             '</strong></a>'));
         $errors['err'] = __('Unable to register account. See messages below');
+        error_log("Profile Debug: Email already registered ($addr).");
     }
-    elseif (!$addr)
+    elseif (!$addr) {
         $errors['email'] = sprintf(__('%s is a required field'), $user_form->getField('email')->getLocal('label'));
-    elseif (!$user_form->getField('name')->getClean())
+    }
+    elseif (!$user_form->getField('name')->getClean()) {
         $errors['name'] = sprintf(__('%s is a required field'), $user_form->getField('name')->getLocal('label'));
+    }
     // Registration for existing users
     elseif ($addr && ($user = User::lookupByEmail($addr)) && !$user->updateInfo($_POST, $errors))
       $errors['err'] = __('Unable to register account. See messages below');
@@ -110,6 +125,7 @@ elseif ($_POST) {
     }
 
     if (!$errors) {
+        error_log("Profile Debug: Success! Processing registration.");
         switch ($_POST['do']) {
         case 'create':
             $content = Page::lookupByType('registration-confirm');
