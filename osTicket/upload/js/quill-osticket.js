@@ -176,7 +176,12 @@
                     
                     if (!htmlMode) {
                         // Switch to HTML mode
-                        const currentHTML = quill.root.innerHTML;
+                        let currentHTML = quill.root.innerHTML;
+                        
+                        // Clean up empty paragraph tags
+                        if (currentHTML === '<p><br></p>') {
+                            currentHTML = '';
+                        }
                         
                         // Create HTML textarea
                         htmlTextarea = $('<textarea class="html-editor-textarea"></textarea>');
@@ -204,8 +209,12 @@
                     } else {
                         // Switch back to visual mode
                         const updatedHTML = htmlTextarea.val();
-                        quill.clipboard.dangerouslyPasteHTML(updatedHTML);
-                        $textarea.val(updatedHTML);
+                        
+                        // Clean up empty paragraph tags before inserting
+                        const cleanedHTML = updatedHTML === '<p><br></p>' ? '' : updatedHTML;
+                        
+                        quill.clipboard.dangerouslyPasteHTML(cleanedHTML);
+                        $textarea.val(cleanedHTML === '<p><br></p>' ? '' : cleanedHTML);
                         
                         // Remove textarea, show editor
                         htmlTextarea.remove();
@@ -221,11 +230,22 @@
             // Load initial content from textarea
             if ($textarea.val()) {
                 quill.clipboard.dangerouslyPasteHTML($textarea.val());
+            } else {
+                // Clear default Quill content if textarea is empty
+                // Set contents to empty array to avoid <p><br></p>
+                quill.setContents([]);
+                $textarea.val('');
             }
 
             // Sync Quill content back to textarea on change
             quill.on('text-change', function() {
-                $textarea.val(quill.root.innerHTML);
+                const html = quill.root.innerHTML;
+                // Don't sync if it's just the empty paragraph or empty content
+                if (html === '<p><br></p>' || html === '') {
+                    $textarea.val('');
+                } else {
+                    $textarea.val(html);
+                }
             });
 
             // Handle form reset
@@ -242,10 +262,18 @@
 
             // Add API methods (for compatibility)
             const api = {
-                getCode: function() { return quill.root.innerHTML; },
+                getCode: function() { 
+                    const html = quill.root.innerHTML;
+                    return (html === '<p><br></p>') ? '' : html;
+                },
                 setCode: function(html) {
-                    quill.clipboard.dangerouslyPasteHTML(html || '');
-                    $textarea.val(html || '');
+                    if (!html || html === '<p><br></p>') {
+                        quill.setText('');
+                        $textarea.val('');
+                    } else {
+                        quill.clipboard.dangerouslyPasteHTML(html);
+                        $textarea.val(html);
+                    }
                 },
                 getText: function() { return quill.getText(); },
                 focus: function() { quill.focus(); },
