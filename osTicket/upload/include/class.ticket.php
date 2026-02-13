@@ -1577,6 +1577,13 @@ implements RestrictedAccess, Threadable, Searchable {
         if (!$this->save(true))
             return false;
 
+        // --- WEBHOOK MOD START ---
+        if ($this->isClosed()) {
+            require_once(INCLUDE_DIR . 'class.webhook.php');
+            WebhookManager::send('ticket.closed', $this);
+        }
+        // --- WEBHOOK MOD END ---
+
         // Refer thread to previously assigned or closing agent
         if ($refer && $cfg->autoReferTicketsOnClose())
             $this->getThread()->refer($refer);
@@ -3140,65 +3147,6 @@ implements RestrictedAccess, Threadable, Searchable {
 
         $ticket->setLastMessage($message);
 
-        // WEBHOOK: Trigger on client reply
-        if ($message->getUserId() == $ticket->getUserId()) {
-            global $cfg;
-            
-            // Check if webhooks are enabled
-            if ($cfg->get('webhook_enabled') && $cfg->get('webhook_event_client_reply')) {
-                $webhookUrl = $cfg->get('webhook_url');
-                
-                if ($webhookUrl) {
-                    // Prepare webhook payload
-                    $cleanMessage = strip_tags($message->getBody()->getClean());
-                    
-                    $payload = array(
-                        'event'       => 'client_reply',
-                        'ticket_id'   => $ticket->getNumber(),
-                        'internal_id' => $ticket->getId(),
-                        'user'        => $ticket->getName(),
-                        'email'       => $ticket->getEmail(),
-                        'subject'     => $ticket->getSubject(),
-                        'message'     => substr($cleanMessage, 0, 500),
-                        'timestamp'   => date('c'),
-                        'ticket_url'  => $cfg->getBaseUrl() . 'scp/tickets.php?id=' . $ticket->getId()
-                    );
-
-                    // Send webhook
-                    $ch = curl_init($webhookUrl);
-                    $jsonData = json_encode($payload);
-                    
-                    $headers = array('Content-Type: application/json');
-                    
-                    // Add custom headers if configured
-                    if ($customHeaders = $cfg->get('webhook_headers')) {
-                        $headerLines = explode("\n", $customHeaders);
-                        foreach ($headerLines as $header) {
-                            $header = trim($header);
-                            if ($header) {
-                                $headers[] = $header;
-                            }
-                        }
-                    }
-                    
-                    // Add signature if secret is configured
-                    if ($secret = $cfg->get('webhook_secret')) {
-                        $signature = hash_hmac('sha256', $jsonData, $secret);
-                        $headers[] = 'X-Webhook-Signature: sha256=' . $signature;
-                    }
-
-                    curl_setopt($ch, CURLOPT_POST, 1);
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, $cfg->get('webhook_timeout') ?: 10);
-                    
-                    curl_exec($ch);
-                    curl_close($ch);
-                }
-            }
-        }
-
         // Add email recipients as collaborators...
         if ($vars['recipients']
             && (strtolower($origin) != 'email' || ($cfg && $cfg->addCollabsViaEmail()))
@@ -3325,6 +3273,11 @@ implements RestrictedAccess, Threadable, Searchable {
         $type = array('type' => 'message', 'uid' => $vars['userId']);
         Signal::send('object.created', $this, $type);
 
+        // --- WEBHOOK MOD START ---
+        require_once(INCLUDE_DIR . 'class.webhook.php');
+        WebhookManager::send('client.reply', $this, $message);
+        // --- WEBHOOK MOD END ---
+
         return $message;
     }
 
@@ -3446,6 +3399,11 @@ implements RestrictedAccess, Threadable, Searchable {
 
         $type = array('type' => 'message');
         Signal::send('object.created', $this, $type);
+
+        // --- WEBHOOK MOD START ---
+        require_once(INCLUDE_DIR . 'class.webhook.php');
+        WebhookManager::send('staff.reply', $this, $response);
+        // --- WEBHOOK MOD END ---
 
         /* email the user??  - if disabled - then bail out */
         if (!$alert)
@@ -4653,6 +4611,12 @@ implements RestrictedAccess, Threadable, Searchable {
         Signal::send('ticket.created', $ticket);
 
         /* Phew! ... time for tea (KETEPA) */
+
+        // --- WEBHOOK MOD START ---
+        require_once(INCLUDE_DIR . 'class.webhook.php');
+        // We pass $ticket and $message (the initial body of the ticket)
+        WebhookManager::send('ticket.created', $ticket, $message);
+        // --- WEBHOOK MOD END ---
 
         return $ticket;
     }
