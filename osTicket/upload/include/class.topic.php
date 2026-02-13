@@ -626,7 +626,32 @@ implements TemplateVariable, Searchable {
         if (!($names = static::getHelpTopics(false, true, false)))
             return;
 
-        $names = Internationalization::sortKeyedList($names);
+        // Sort by numeric prefix if present, then alphabetically
+        uasort($names, function($a, $b) {
+            // Extract numeric prefix from both names
+            preg_match('/^\s*(\d+)\s*[.\-\s]/', $a, $matches_a);
+            preg_match('/^\s*(\d+)\s*[.\-\s]/', $b, $matches_b);
+            
+            $num_a = isset($matches_a[1]) ? (int)$matches_a[1] : null;
+            $num_b = isset($matches_b[1]) ? (int)$matches_b[1] : null;
+            
+            // If both have numeric prefixes, compare numerically
+            if ($num_a !== null && $num_b !== null) {
+                if ($num_a !== $num_b) {
+                    return $num_a - $num_b;
+                }
+            }
+            // If only one has a numeric prefix, it comes first
+            elseif ($num_a !== null) {
+                return -1;
+            }
+            elseif ($num_b !== null) {
+                return 1;
+            }
+            
+            // Fall back to alphabetical sorting
+            return strcmp($a, $b);
+        });
 
         $update = array_keys($names);
         foreach ($update as $idx=>&$id) {

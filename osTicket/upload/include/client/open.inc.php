@@ -7,13 +7,18 @@ $topicId = $_POST['topicId'] ?? 0;
 // Get the User Form (Contact Info) from osTicket System
 $userForm = UserForm::getUserForm()->getForm($_POST);
 
-// Fetch Help Topics
+// Fetch Help Topics - maintains sort order from database
 $rawTopics = Topic::getHelpTopics(false, false, true);
 $allTopics = array();
 if (is_array($rawTopics)) {
     foreach ($rawTopics as $id => $name) {
         $allTopics[$id] = array('topic' => (string)$name);
     }
+}
+// Convert to indexed array to preserve insertion order in JavaScript
+$orderedTopics = array();
+foreach ($allTopics as $id => $data) {
+    $orderedTopics[] = array('id' => $id, 'topic' => $data['topic']);
 }
 
 // Javascript State
@@ -143,7 +148,8 @@ $serverState = array(
 </div>
 
 <script type="text/javascript">
-const RAW_TOPICS = <?php echo ($t = json_encode($allTopics)) ? $t : '{}'; ?>;
+const RAW_TOPICS = <?php echo ($t = json_encode($orderedTopics)) ? $t : '[]'; ?>;
+const TOPICS_BY_ID = <?php echo ($t = json_encode($allTopics)) ? $t : '{}'; ?>;
 const STATE = <?php echo ($s = json_encode($serverState)) ? $s : '{}'; ?>;
 
 const app = {
@@ -209,11 +215,10 @@ const app = {
         $('#topic-cards-container').empty();
 
         let matchCount = 0;
-        Object.keys(RAW_TOPICS).forEach(id => {
-            let t = RAW_TOPICS[id];
-            let tName = (typeof t === 'string') ? t : t.topic;
+        RAW_TOPICS.forEach(t => {
+            let tName = t.topic;
             if (tName.toLowerCase().indexOf(query) !== -1) {
-                this.createCard(id, tName); 
+                this.createCard(t.id, tName); 
                 matchCount++;
             }
         });
@@ -229,11 +234,10 @@ const app = {
         this.updateBreadcrumb([]);
         $('#topic-cards-container').empty();
         
-        Object.keys(RAW_TOPICS).forEach(id => {
-            let t = RAW_TOPICS[id];
-            let tName = (typeof t === 'string') ? t : t.topic;
+        RAW_TOPICS.forEach(t => {
+            let tName = t.topic;
             if (tName && tName.indexOf(' / ') === -1) {
-                this.createCard(id, tName);
+                this.createCard(t.id, tName);
             }
         });
         
@@ -247,25 +251,20 @@ const app = {
         this.updateBreadcrumb(parentName.split(' / '));
         $('#topic-cards-container').empty();
         
-        Object.keys(RAW_TOPICS).forEach(id => {
-            let t = RAW_TOPICS[id];
-            let tName = (typeof t === 'string') ? t : t.topic;
+        RAW_TOPICS.forEach(t => {
+            let tName = t.topic;
             if (tName && tName.startsWith(parentName + ' / ')) {
                 const parts = tName.split(' / ');
                 if (parts.length === (parentName.split(' / ').length + 1)) {
-                    this.createCard(id, parts[parts.length - 1]);
+                    this.createCard(t.id, parts[parts.length - 1]);
                 }
             }
         });
     },
 
     createCard: function(id, name) {
-        let t = RAW_TOPICS[id];
-        let tName = (typeof t === 'string') ? t : t.topic;
-        const hasChildren = Object.values(RAW_TOPICS).some(sub => {
-            let subName = (typeof sub === 'string') ? sub : sub.topic;
-            return subName.startsWith(tName + ' / ');
-        });
+        let tName = TOPICS_BY_ID[id] ? TOPICS_BY_ID[id].topic : name;
+        const hasChildren = RAW_TOPICS.some(t => t.topic.startsWith(tName + ' / '));
         const safeName = tName.replace(/'/g, "\\'");
         const action = hasChildren ? `app.renderSubTopics('${safeName}')` : `app.selectTopic(${id})`;
         
@@ -285,8 +284,7 @@ const app = {
         $('#topicId').val(id);
         
         if(isRestoring) {
-            let t = RAW_TOPICS[id];
-            let tName = (typeof t === 'string') ? t : t.topic;
+            let tName = TOPICS_BY_ID[id] ? TOPICS_BY_ID[id].topic : null;
             if(tName && tName.includes(' / ')) {
                  const parentPath = tName.substring(0, tName.lastIndexOf(' / '));
                  this.renderSubTopics(parentPath);
