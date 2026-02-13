@@ -75,6 +75,8 @@ class TurnstileField extends FormField {
 }
 
 class TurnstileWidget extends Widget {
+    static $script_loaded = false;
+
     function render() {
         $fconfig = $this->field->getConfiguration();
 
@@ -108,9 +110,10 @@ class TurnstileWidget extends Widget {
         $size = $fconfig['size'] ?? $presets[$mode]['size'];
         $appearance = $fconfig['appearance'] ?? $presets[$mode]['appearance'];
         $execution = $fconfig['execution'] ?? $presets[$mode]['execution'];
+        $widget_id = $this->id;
         ?>
         <div 
-            id="<?php echo $this->id; ?>" 
+            id="<?php echo $widget_id; ?>" 
             class="cf-turnstile" 
             data-sitekey="<?php echo TurnstileField::$cf_site_key; ?>" 
             data-theme="<?php echo $theme ?: 'auto'; ?>" 
@@ -121,8 +124,52 @@ class TurnstileWidget extends Widget {
             <?php if (!empty($fconfig['cdata'])) { ?>data-cdata="<?php echo $fconfig['cdata']; ?>"<?php } ?>
         >
         </div>
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <script>
+        // Render Turnstile widget - works on initial load and after form errors
+        (function() {
+            function renderTurnstile() {
+                var element = document.getElementById('<?php echo $widget_id; ?>');
+                if (element && typeof window.turnstile !== 'undefined') {
+                    // Clear any existing widget and render fresh
+                    window.turnstile.remove('#<?php echo $widget_id; ?>');
+                    window.turnstile.render('#<?php echo $widget_id; ?>', {
+                        sitekey: '<?php echo TurnstileField::$cf_site_key; ?>',
+                        theme: '<?php echo $theme ?: 'auto'; ?>',
+                        size: '<?php echo $size ?: 'normal'; ?>',
+                        appearance: '<?php echo $appearance ?: 'always'; ?>',
+                        execution: '<?php echo $execution ?: 'render'; ?>'
+                        <?php if (!empty($fconfig['action'])) { ?>,action: '<?php echo $fconfig['action']; ?>'<?php } ?>
+                        <?php if (!empty($fconfig['cdata'])) { ?>,cData: '<?php echo $fconfig['cdata']; ?>'<?php } ?>
+                    });
+                }
+            }
+            
+            if (typeof window.turnstile !== 'undefined') {
+                renderTurnstile();
+            } else {
+                // Wait for Turnstile to load if not available yet
+                var maxAttempts = 50;
+                var attempts = 0;
+                var interval = setInterval(function() {
+                    attempts++;
+                    if (typeof window.turnstile !== 'undefined') {
+                        renderTurnstile();
+                        clearInterval(interval);
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }
+        })();
+        </script>
         <?php
+        // Only load the script once per page
+        if (!self::$script_loaded) {
+            self::$script_loaded = true;
+            ?>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+            <?php
+        }
     }
 
     function getValue() {
