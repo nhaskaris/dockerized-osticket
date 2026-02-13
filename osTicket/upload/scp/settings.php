@@ -34,6 +34,7 @@ $settingOptions=array(
     'webhooks' =>
         array(__('Webhook Settings'), 'settings.webhooks'),
 );
+
 //Handle a POST.
 $target=(isset($_REQUEST['t']) && $settingOptions[$_REQUEST['t']])?$_REQUEST['t']:'system';
 $page = false;
@@ -41,7 +42,14 @@ if (isset($settingOptions[$target]))
     $page = $settingOptions[$target];
 
 if($page && $_POST && !$errors) {
-    if($cfg && $cfg->updateSettings($_POST,$errors)) {
+    
+    // --- BYPASS START: Skip core save logic for webhooks ---
+    if ($target === 'webhooks') {
+        // Do nothing here. The include file below handles the DB save.
+    }
+    // --- BYPASS END ---
+
+    elseif($cfg && $cfg->updateSettings($_POST,$errors)) {
         $msg=sprintf(__('Successfully updated %s.'), Format::htmlchars($page[0]));
     } elseif(!$errors['err']) {
         $errors['err'] = sprintf('%s %s',

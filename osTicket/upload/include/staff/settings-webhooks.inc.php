@@ -1,148 +1,181 @@
 <?php
-if(!defined('OSTADMININC') || !$thisstaff || !$thisstaff->isAdmin() || !$config) die('Access Denied');
-?>
+if(!defined('OSTADMININC') || !$thisstaff || !$thisstaff->isAdmin()) die('Access Denied');
 
-<h2><?php echo __('Webhook Settings'); ?></h2>
+require_once(INCLUDE_DIR . 'class.webhook.php');
+
+$qs = array();
+$webhooks = array();
+$sql = 'SELECT * FROM '.TABLE_PREFIX.'webhook ORDER BY name';
+if (($res=db_query($sql)) && db_num_rows($res)) {
+    while ($row = db_fetch_array($res))
+        $webhooks[] = $row;
+}
+
+$webhook = null;
+$errors = array();
+
+// Handle POST actions
+if ($_POST) {
+    if ($_POST['do'] == 'update') {
+        if (($webhook = Webhook::lookup($_POST['id'])) && $webhook->update($_POST, $errors)) {
+            $msg = 'Webhook updated successfully';
+            $webhook = null; // Return to list view
+        } elseif (!$webhook) {
+            $errors['err'] = 'Unknown Webhook';
+        }
+    } elseif ($_POST['do'] == 'create') {
+        if (($webhook = Webhook::create($_POST, $errors))) {
+            $msg = 'Webhook created successfully';
+            $webhook = null; // Return to list view
+        } else {
+            $errors['err'] = 'Unable to create Webhook. Correct errors below.';
+        }
+    } elseif ($_POST['do'] == 'delete') {
+        if (($webhook = Webhook::lookup($_POST['id'])) && $webhook->delete()) {
+            $msg = 'Webhook deleted successfully';
+            $webhook = null;
+        } else {
+            $errors['err'] = 'Unable to delete Webhook';
+        }
+    }
+}
+
+// Handle Editing (GET)
+if ($_REQUEST['id'] && !$_POST) {
+    $webhook = Webhook::lookup($_REQUEST['id']);
+}
+
+// SHOW FORM (Add or Edit)
+if ($webhook || $_REQUEST['a']=='add') {
+    $action = $webhook ? 'update' : 'create';
+    $info = $webhook ? $webhook->ht : $_POST;
+?>
+<h2><?php echo $webhook ? 'Update Webhook' : 'Add New Webhook'; ?></h2>
 <form action="settings.php?t=webhooks" method="post" class="save">
  <?php csrf_token(); ?>
- <input type="hidden" name="t" value="webhooks" />
- <table class="form_table settings_table" width="940" border="0" cellspacing="0" cellpadding="2">
+ <input type="hidden" name="do" value="<?php echo $action; ?>" />
+ <?php if ($webhook) { ?> <input type="hidden" name="id" value="<?php echo $webhook->getId(); ?>" /> <?php } ?>
+ 
+ <table class="form_table" width="940" border="0" cellspacing="0" cellpadding="2">
     <thead>
         <tr>
             <th colspan="2">
-                <em><strong><?php echo __('Webhook Configuration'); ?></strong></em>
+                <em><?php echo __('Webhook Configuration'); ?></em>
             </th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td width="220">
-                <?php echo __('Enable Webhooks'); ?>:
-            </td>
+            <td width="180" class="required"><?php echo __('Name'); ?>:</td>
             <td>
-                <input type="checkbox" name="webhook_enabled" value="1"
-                    <?php echo $config['webhook_enabled'] ? 'checked="checked"' : ''; ?> />
-                <?php echo __('Enable webhook notifications'); ?>
-                <i class="help-tip icon-question-sign" href="#webhook_enabled"></i>
-                <div class="error"><?php echo $errors['webhook_enabled']; ?></div>
+                <input type="text" size="40" name="name" value="<?php echo $info['name']; ?>" autofocus>
+                &nbsp;<span class="error">*&nbsp;<?php echo $errors['name']; ?></span>
             </td>
         </tr>
         <tr>
-            <td width="220" class="required">
-                <?php echo __('Webhook URL'); ?>:
-            </td>
+            <td width="180" class="required"><?php echo __('Status'); ?>:</td>
             <td>
-                <input type="text" size="70" name="webhook_url" 
-                    value="<?php echo $config['webhook_url']; ?>"
-                    placeholder="https://example.com/webhook" />
-                <br/>
-                <span class="faded"><?php echo __('The URL where webhook events will be sent'); ?></span>
-                <div class="error">&nbsp;<?php echo $errors['webhook_url']; ?></div>
+                <input type="checkbox" name="status" value="1" <?php echo $info['status'] ? 'checked="checked"' : ''; ?>>
+                <?php echo __('Active'); ?>
             </td>
         </tr>
         <tr>
-            <td width="220">
-                <?php echo __('Webhook Secret'); ?>:
-            </td>
+            <td width="180" class="required"><?php echo __('Payload URL'); ?>:</td>
             <td>
-                <input type="text" size="40" name="webhook_secret" 
-                    value="<?php echo $config['webhook_secret']; ?>"
-                    placeholder="Optional secret for webhook verification" />
-                <br/>
-                <span class="faded"><?php echo __('Optional: Secret key to sign webhook payloads'); ?></span>
-                <div class="error"><?php echo $errors['webhook_secret']; ?></div>
+                <input type="text" size="60" name="url" value="<?php echo $info['url']; ?>" placeholder="https://slack.com/api/webhooks/...">
+                &nbsp;<span class="error">*&nbsp;<?php echo $errors['url']; ?></span>
+            </td>
+        </tr>
+        <tr>
+            <td width="180"><?php echo __('Custom Headers'); ?>:</td>
+            <td>
+                <textarea name="headers" rows="3" cols="60" placeholder="Authorization: Bearer key"><?php echo $info['headers']; ?></textarea>
+                <br><span class="faded"><?php echo __('One per line'); ?></span>
+            </td>
+        </tr>
+        <tr>
+            <td width="180"><?php echo __('Timeout'); ?>:</td>
+            <td>
+                <input type="number" name="timeout" value="<?php echo $info['timeout'] ?: 10; ?>" style="width: 60px;"> seconds
             </td>
         </tr>
     </tbody>
     <thead>
         <tr>
-            <th colspan="2">
-                <em><strong><?php echo __('Event Triggers'); ?></strong></em>
-            </th>
+            <th colspan="2"><em><?php echo __('Trigger Events'); ?></em></th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td width="220">
-                <?php echo __('Client Reply Event'); ?>:
-            </td>
-            <td>
-                <input type="checkbox" name="webhook_event_client_reply" value="1"
-                    <?php echo $config['webhook_event_client_reply'] ? 'checked="checked"' : ''; ?> />
-                <?php echo __('Trigger webhook when client replies to ticket'); ?>
-            </td>
+            <td><?php echo __('New Ticket'); ?>:</td>
+            <td><input type="checkbox" name="event_new_ticket" value="1" <?php echo $info['event_new_ticket']?'checked':''; ?>></td>
         </tr>
         <tr>
-            <td width="220">
-                <?php echo __('New Ticket Event'); ?>:
-            </td>
-            <td>
-                <input type="checkbox" name="webhook_event_new_ticket" value="1"
-                    <?php echo $config['webhook_event_new_ticket'] ? 'checked="checked"' : ''; ?> 
-                    disabled="disabled" style="opacity: 0.5;" />
-                <span style="color: #999;"><?php echo __('Trigger webhook when new ticket is created'); ?> <em>(<?php echo __('Not yet implemented'); ?>)</em></span>
-            </td>
+            <td><?php echo __('Ticket Closed'); ?>:</td>
+            <td><input type="checkbox" name="event_ticket_closed" value="1" <?php echo $info['event_ticket_closed']?'checked':''; ?>></td>
         </tr>
         <tr>
-            <td width="220">
-                <?php echo __('Ticket Closed Event'); ?>:
-            </td>
-            <td>
-                <input type="checkbox" name="webhook_event_ticket_closed" value="1"
-                    <?php echo $config['webhook_event_ticket_closed'] ? 'checked="checked"' : ''; ?> 
-                    disabled="disabled" style="opacity: 0.5;" />
-                <span style="color: #999;"><?php echo __('Trigger webhook when ticket is closed'); ?> <em>(<?php echo __('Not yet implemented'); ?>)</em></span>
-            </td>
+            <td><?php echo __('Staff Reply'); ?>:</td>
+            <td><input type="checkbox" name="event_staff_reply" value="1" <?php echo $info['event_staff_reply']?'checked':''; ?>></td>
         </tr>
         <tr>
-            <td width="220">
-                <?php echo __('Staff Reply Event'); ?>:
-            </td>
-            <td>
-                <input type="checkbox" name="webhook_event_staff_reply" value="1"
-                    <?php echo $config['webhook_event_staff_reply'] ? 'checked="checked"' : ''; ?> 
-                    disabled="disabled" style="opacity: 0.5;" />
-                <span style="color: #999;"><?php echo __('Trigger webhook when staff replies to ticket'); ?> <em>(<?php echo __('Not yet implemented'); ?>)</em></span>
-            </td>
-        </tr>
-    </tbody>
-    <thead>
-        <tr>
-            <th colspan="2">
-                <em><strong><?php echo __('Webhook Headers'); ?></strong></em>
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td width="220">
-                <?php echo __('Custom Headers'); ?>:
-            </td>
-            <td>
-                <textarea name="webhook_headers" rows="5" cols="70" 
-                    placeholder="Authorization: Bearer your-token&#10;X-Custom-Header: value"><?php 
-                    echo $config['webhook_headers']; ?></textarea>
-                <br/>
-                <span class="faded"><?php echo __('One header per line in format: Header-Name: value'); ?></span>
-                <div class="error"><?php echo $errors['webhook_headers']; ?></div>
-            </td>
-        </tr>
-        <tr>
-            <td width="220">
-                <?php echo __('Timeout (seconds)'); ?>:
-            </td>
-            <td>
-                <input type="number" name="webhook_timeout" min="1" max="60"
-                    value="<?php echo $config['webhook_timeout'] ?: 10; ?>" />
-                <span class="faded"><?php echo __('Maximum time to wait for webhook response (1-60 seconds)'); ?></span>
-                <div class="error"><?php echo $errors['webhook_timeout']; ?></div>
-            </td>
+            <td><?php echo __('Client Reply'); ?>:</td>
+            <td><input type="checkbox" name="event_client_reply" value="1" <?php echo $info['event_client_reply']?'checked':''; ?>></td>
         </tr>
     </tbody>
  </table>
-<div style="clear: both; height: 60px;"></div>
-<p style="text-align:center; position: relative; z-index: 1000; margin-top: 20px;">
+ <p style="text-align:center">
     <input type="submit" name="submit" value="<?php echo __('Save Changes'); ?>">
-    <input type="reset"  name="reset"  value="<?php echo __('Reset'); ?>">
-</p>
+    <input type="button" name="cancel" value="<?php echo __('Cancel'); ?>" onclick='window.location.href="settings.php?t=webhooks"'>
+ </p>
 </form>
+
+<?php 
+// SHOW LIST VIEW
+} else { ?>
+
+<div style="margin-bottom:10px">
+    <div class="pull-left"><h2><?php echo __('Webhooks'); ?></h2></div>
+    <div class="pull-right">
+        <a href="settings.php?t=webhooks&a=add" class="green button action-button"><i class="icon-plus-sign"></i> <?php echo __('Add New Webhook'); ?></a>
+    </div>
+    <div class="clear"></div>
+</div>
+
+<table class="list" border="0" cellspacing="1" cellpadding="0" width="940">
+    <thead>
+        <tr>
+            <th width="250"><?php echo __('Name'); ?></th>
+            <th width="350"><?php echo __('URL'); ?></th>
+            <th><?php echo __('Active Events'); ?></th>
+            <th width="80"><?php echo __('Status'); ?></th>
+        </tr>
+    </thead>
+    <tbody>
+    <?php
+    if ($webhooks) {
+        foreach ($webhooks as $w) {
+            $events = [];
+            if ($w['event_new_ticket']) $events[] = 'New Ticket';
+            if ($w['event_ticket_closed']) $events[] = 'Closed';
+            if ($w['event_staff_reply']) $events[] = 'Staff Reply';
+            if ($w['event_client_reply']) $events[] = 'Client Reply';
+            ?>
+            <tr>
+                <td>
+                    <a href="settings.php?t=webhooks&id=<?php echo $w['id']; ?>">
+                        <strong><?php echo Format::htmlchars($w['name']); ?></strong>
+                    </a>
+                </td>
+                <td><?php echo Format::htmlchars(substr($w['url'],0,50)).(strlen($w['url'])>50?'...':''); ?></td>
+                <td><?php echo implode(', ', $events); ?></td>
+                <td><?php echo $w['status'] ? '<span class="Active">Active</span>' : '<span class="faded">Disabled</span>'; ?></td>
+            </tr>
+    <?php }
+    } else { ?>
+        <tr><td colspan="4"><?php echo __('No webhooks found. Click "Add New Webhook" to create one.'); ?></td></tr>
+    <?php } ?>
+    </tbody>
+</table>
+
+<?php } ?>

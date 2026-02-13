@@ -4713,8 +4713,15 @@ class ChoicesWidget extends Widget {
         if (!is_array($values))
             $values = $have_def ? array($def_key => $choices[$def_key]) : array();
 
+        // Define our base class
+        $css_classes = 'searchable-choice';
+        
+        // Append any existing config classes
         if (isset($config['classes']))
-            $classes = 'class="'.$config['classes'].'"';
+            $css_classes .= ' ' . $config['classes'];
+            
+        // Build the full HTML attribute
+        $classes = 'class="' . $css_classes . '"';
         ?>
         <select name="<?php echo $this->name; ?>[]"
             <?php echo implode(' ', array_filter(array($classes))); ?>
@@ -5232,11 +5239,12 @@ class ThreadEntryWidget extends Widget {
         }
 
         list($draft, $attrs) = Draft::getDraftAndDataAttrs($namespace, $object_id, $this->value);
+        global $thisstaff;
         ?>
         <textarea name="<?php echo $this->name; ?>"
             placeholder="<?php echo Format::htmlchars($this->field->get('placeholder')); ?>"
             class="<?php if ($config['html']) echo 'richtext';
-                ?> draft draft-delete" <?php echo $attrs; ?>
+                ?> draft<?php if ($thisstaff && $thisstaff->isAdmin()) echo ' draft-delete'; ?>" <?php echo $attrs; ?>
             cols="21" rows="8" style="width:100%; box-sizing: border-box;"><?php echo
             ThreadEntryBody::clean($this->value ?: $draft); ?></textarea>
     <?php
