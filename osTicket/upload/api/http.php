@@ -7,6 +7,9 @@ $dispatcher = patterns('',
     url_get("^/tickets/list\.(?P<format>xml|json)$", array('tickets.php:TicketReplyApiController','getList')),
     url_post("^/tickets/(?P<id>\d+)/reply\.(?P<format>xml|json)$", array('tickets.php:TicketReplyApiController','reply')),
     url_get("^/tickets/(?P<id>\d+)\.(?P<format>xml|json)$", array('tickets.php:TicketReplyApiController','get')),
+
+    url_get("^/lists(?:\.(?P<format>json))?$", array('lists.php:ListsApiController','getList')),
+    url_post("^/lists/(?P<id>\d+)(?:\.(?P<format>json))?$", array('lists.php:ListsApiController','create')),
     
     url_get("^/filters(?:\.(?P<format>json))?$", array('filters.php:FilterApiController','getList')),
     url_post("^/filters(?:\.(?P<format>json))?$", array('filters.php:FilterApiController','create')),
