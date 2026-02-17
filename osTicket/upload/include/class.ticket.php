@@ -2050,11 +2050,11 @@ implements RestrictedAccess, Threadable, Searchable {
         if (!$assignee || !is_object($assignee))
             return false;
 
-        $user_comments = (bool) $comments;
         $assigner = $thisstaff ?: _S('SYSTEM (Auto Assignment)');
 
-        //Log an internal note - no alerts on the internal note.
-        if ($user_comments) {
+        // Only log a note if comments have actual content (strip HTML and whitespace)
+        $clean_comments = trim(strip_tags($comments));
+        if ($clean_comments) {
             if ($assignee instanceof Staff
                     && $thisstaff
                     // self assignment
