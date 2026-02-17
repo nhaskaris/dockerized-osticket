@@ -6,6 +6,7 @@
 
 -- 1. Add the new event columns (Defaulting to 0/False)
 ALTER TABLE `%TABLE_PREFIX%webhook`
+    ADD COLUMN IF NOT EXISTS `timeout` int(11) unsigned NOT NULL DEFAULT '0',
     ADD `event_new_ticket` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `timeout`,
     ADD `event_ticket_closed` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_new_ticket`,
     ADD `event_staff_reply` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_ticket_closed`,
