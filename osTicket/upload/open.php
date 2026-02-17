@@ -17,6 +17,12 @@ require('client.inc.php');
 define('SOURCE','Web'); //Ticket source.
 $ticket = null;
 $errors=array();
+
+// Clear form data on fresh page load (not a form submission)
+if (!$_POST && isset($_SESSION[':form-data'])) {
+    unset($_SESSION[':form-data']);
+}
+
 if ($_POST) {
     $vars = $_POST;
     $vars['deptId']=$vars['emailId']=0; //Just Making sure we don't accept crap...only topicId is expected.
@@ -54,9 +60,10 @@ if ($_POST) {
         } else
             $ost->getCSRF()->rotate();
     }else{
-        // $errors['err'] = $errors['err'] ?: sprintf('%s %s',
-        //     __('Unable to create a ticket.'),
-        //     __('Correct any errors below and try again.'));
+        // Preserve form data in session so it can be restored on validation errors
+        if (!is_array($_SESSION[':form-data']))
+            $_SESSION[':form-data'] = array();
+        $_SESSION[':form-data'] = Format::htmlchars($vars);
     }
 }
 
