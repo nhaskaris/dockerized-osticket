@@ -5,12 +5,12 @@
  */
 
 -- 1. Add the new event columns (Defaulting to 0/False)
-ALTER TABLE `%TABLE_PREFIX%webhook`
-    ADD COLUMN IF NOT EXISTS `timeout` int(11) unsigned NOT NULL DEFAULT '0',
-    ADD COLUMN IF NOT EXISTS `event_new_ticket` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `timeout`,
-    ADD COLUMN IF NOT EXISTS `event_ticket_closed` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_new_ticket`,
-    ADD COLUMN IF NOT EXISTS `event_staff_reply` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_ticket_closed`,
-    ADD COLUMN IF NOT EXISTS `event_client_reply` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_staff_reply`;
+ALTER TABLE `ost_webhook` 
+    ADD COLUMN `timeout` int(11) unsigned NOT NULL DEFAULT '0',  
+    ADD COLUMN `event_new_ticket` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `timeout`,  
+    ADD COLUMN `event_ticket_closed` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_new_ticket`,  
+    ADD COLUMN `event_staff_reply` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_ticket_closed`,  
+    ADD COLUMN `event_client_reply` tinyint(1) unsigned NOT NULL DEFAULT '0' AFTER `event_staff_reply`;
 
 -- 2. (Optional) If you have existing webhooks, enable them for ALL events by default
 --    so they don't stop working suddenly.
