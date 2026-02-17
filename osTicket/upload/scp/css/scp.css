@@ -2233,7 +2233,7 @@ time.faq {
     background:#f8f8f8;
     border:2px solid #2a67ac;
     display:none;
-    z-index:10;
+    z-index:1050;
     box-shadow: 0 5px 60px #001;
     border-radius: 5px;
     max-height: 72%;
@@ -2267,7 +2267,7 @@ time.faq {
     bottom:0;
     left:0;
     right:0;
-    z-index:11;
+    z-index:1051;
 }
 
 .redactor-editor {
@@ -2700,7 +2700,7 @@ ul.progress li.no small {color:red;}
     width: 100%;
     height: 100%;
     background: #000;
-    z-index: 9;
+    z-index: 1000;
     -webkit-transform: translate3d(0,0,0);
     opacity: 0.5;
 }
