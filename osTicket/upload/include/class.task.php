@@ -901,7 +901,8 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
 
         // Post internal note if any
         $note = $form->getField('comments')->getClean();
-        if ($note) {
+        // Check if comments contain actual content (not just empty HTML tags)
+        if ($note && trim(Format::striptags($note))) {
             $title = sprintf(__('%1$s transferred from %2$s to %3$s'),
                     __('Task'),
                    $cdept->getName(),
@@ -1427,11 +1428,14 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
 
         // Log comments (if any)
         if (($comments = $form->getField('comments')->getClean())) {
-            $title = sprintf(__('%s updated'), __($field->getLabel()));
-            $_errors = array();
-            $this->postNote(
-                    array('note' => $comments, 'title' => $title),
-                    $_errors, $thisstaff, false);
+            // Check if comments contain actual content (not just empty HTML tags)
+            if (trim(Format::striptags($comments))) {
+                $title = sprintf(__('%s updated'), __($field->getLabel()));
+                $_errors = array();
+                $this->postNote(
+                        array('note' => $comments, 'title' => $title),
+                        $_errors, $thisstaff, false);
+            }
         }
 
         $this->updated = SqlFunction::NOW();

@@ -1681,7 +1681,8 @@ class TicketsAjaxAPI extends AjaxController {
             } else {
                 // Add comment (if provided)
                 $comments = $form->getComments();
-                if ($comments) {
+                // Check if comments contain actual content (not just empty HTML tags)
+                if ($comments && trim(Format::striptags($comments))) {
                     $title = __(sprintf('Ticket Marked %s', ucfirst($action)));
                     $_errors = array();
 
