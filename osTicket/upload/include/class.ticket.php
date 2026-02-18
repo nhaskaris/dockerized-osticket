@@ -2708,7 +2708,8 @@ implements RestrictedAccess, Threadable, Searchable {
         // Post internal note if any
         $note = null;
         $comments = $form->getField('comments')->getClean();
-        if ($comments) {
+        // Check if comments contain actual content (not just empty HTML tags)
+        if ($comments && trim(Format::striptags($comments))) {
             $title = sprintf(__('%1$s transferred from %2$s to %3$s'),
                     __('Ticket'),
                    $cdept->getName(),
@@ -3895,11 +3896,14 @@ implements RestrictedAccess, Threadable, Searchable {
 
        // Log comments (if any)
        if (($comments = $form->getField('comments')->getClean())) {
-           $title = sprintf(__('%s updated'), __($field->getLabel()));
-           $_errors = array();
-           $this->postNote(
-                   array('note' => $comments, 'title' => $title),
-                   $_errors, $thisstaff, false);
+           // Check if comments contain actual content (not just empty HTML tags)
+           if (trim(Format::striptags($comments))) {
+               $title = sprintf(__('%s updated'), __($field->getLabel()));
+               $_errors = array();
+               $this->postNote(
+                       array('note' => $comments, 'title' => $title),
+                       $_errors, $thisstaff, false);
+           }
        }
 
        $this->lastupdate = SqlFunction::NOW();
