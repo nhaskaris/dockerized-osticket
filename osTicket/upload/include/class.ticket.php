@@ -4684,21 +4684,28 @@ implements RestrictedAccess, Threadable, Searchable {
         $role = $ticket->getRole($thisstaff);
 
         $alert = strcasecmp('none', $vars['reply-to']);
-        // post response - if any
+
+        // post response - if any, only if not empty after cleaning
         $response = null;
         if ($vars['response'] && $role->hasPerm(Ticket::PERM_REPLY)) {
-            $vars['response'] = $ticket->replaceVars($vars['response']);
-            // $vars['cannedatachments'] contains the attachments placed on
-            // the response form.
-            $response = $ticket->postReply($vars, $errors, ($alert &&
-                        !$cfg->notifyONNewStaffTicket()));
+            $clean_response = trim(strip_tags((string)$vars['response']));
+            if ($clean_response !== '') {
+                $vars['response'] = $ticket->replaceVars($vars['response']);
+                // $vars['cannedatachments'] contains the attachments placed on
+                // the response form.
+                $response = $ticket->postReply($vars, $errors, ($alert &&
+                            !$cfg->notifyONNewStaffTicket()));
+            }
         }
 
-        // Not assigned...save optional note if any
+        // Not assigned...save optional note if any, only if not empty after cleaning
         if (!$vars['assignId'] && $vars['note']) {
-            if (!$cfg->isRichTextEnabled())
-                $vars['note'] = new TextThreadEntryBody($vars['note']);
-            $ticket->logNote(_S('New Ticket'), $vars['note'], $thisstaff, false);
+            $clean_note = trim(strip_tags((string)$vars['note']));
+            if ($clean_note !== '') {
+                if (!$cfg->isRichTextEnabled())
+                    $vars['note'] = new TextThreadEntryBody($vars['note']);
+                $ticket->logNote(_S('New Ticket'), $vars['note'], $thisstaff, false);
+            }
         }
 
         if (!$cfg->notifyONNewStaffTicket()
