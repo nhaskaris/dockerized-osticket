@@ -3,20 +3,26 @@ header("Content-Type: text/html; charset=UTF-8");
 header(
     "Content-Security-Policy: " .
     "frame-ancestors " . $cfg->getAllowIframes() . "; " .
+    "img-src 'self' data: https://www.gravatar.com http://www.gravatar.com; " .
     "script-src 'self' " .
         "https://cdn.quilljs.com " .
+        "https://cdn.jsdelivr.net " . 
         "https://www.google.com " .
         "https://www.gstatic.com " .
         "https://www.recaptcha.net " .
         "https://challenges.cloudflare.com " .
         "'unsafe-inline'; " .
+    "style-src 'self' 'unsafe-inline' " .
+        "https://cdn.quilljs.com " .
+        "https://cdn.jsdelivr.net " .
+        "https://fonts.googleapis.com; " . // ALLOWS GOOGLE FONT CSS
+    "font-src 'self' data: https://fonts.gstatic.com; " . // ALLOWS THE ACTUAL FONT FILES
     "frame-src " .
         "https://www.google.com " .
         "https://www.recaptcha.net " .
         "https://challenges.cloudflare.com; " .
     "object-src 'none'"
 );
-
 
 $title = ($ost && ($title=$ost->getPageTitle()))
     ? $title : ('osTicket :: '.__('Staff Control Panel'));
