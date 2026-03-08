@@ -300,7 +300,7 @@ class TicketReplyApiController extends ApiController {
 
     function getRequestStructure($format, $data=null) {
         $supported = array(
-            "message", "poster", "userId", "source",
+            "message", "poster", "userId", "source", "is_note", "status", "alert",
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
             )
@@ -320,7 +320,7 @@ class TicketReplyApiController extends ApiController {
         return true;
     }
 
-    function reply($id, $format) {
+    function reply($id, $format='json') {
         $this->requireApiKey();
 
         if (!$id)
@@ -375,21 +375,75 @@ class TicketReplyApiController extends ApiController {
             }
         }
 
+        $alert = isset($data['alert']) ? (bool)$data['alert'] : true;
+
+        if (!$alert) {
+            // These are the keys osTicket looks for internally to suppress emails
+            $vars['no_alert'] = true; 
+            $vars['sendemail'] = false; // Extra safety for some osTicket versions
+        }
+
         // 4. Execution with Error Capture
         try {
-            $message = $ticket->postMessage($vars, 'API');
+            $errors = array(); // Initialize the error reference variable
+            $is_note = isset($data['is_note']) ? (bool)$data['is_note'] : false;
+
+            if ($is_note) {
+                // postNote(array $vars, array &$errors)
+                // Note: The 'origin' is usually set inside $vars['source']
+                $vars['note'] = $data['message'];
+                $vars['source'] = 'API'; 
+                $message = $ticket->postNote($vars, $errors);
+            } else {
+                // postMessage(array $vars, $origin, array &$errors)
+                // postMessage actually takes 3 arguments in some versions
+                $origin = 'API';
+                $message = $ticket->postMessage($vars, $origin, $errors);
+            }
             
             if (!$message) {
-                // Check if osTicket added validation errors to the $vars array
-                $errorMsg = (isset($vars['errors']) && is_array($vars['errors'])) 
-                    ? implode(', ', $vars['errors']) 
+                // Use the $errors variable we just passed by reference
+                $errorMsg = (!empty($errors)) 
+                    ? (is_array($errors) ? implode(', ', $errors) : $errors)
                     : 'Internal osTicket rejection (check filters or ticket status)';
                 
                 $this->exerr(500, "Post Failed: " . $errorMsg);
             }
         } catch (Throwable $e) {
-            // This catches fatal PHP errors (like calling methods on null)
             $this->exerr(500, "Fatal Error: " . $e->getMessage());
+        }
+        
+        if (isset($data['status'])) {
+            $status = null;
+            
+            // 1. Try to find by ID first (it's unique)
+            if (is_numeric($data['status'])) {
+                $status = TicketStatus::lookup($id);
+            }
+
+            // 2. If not numeric, search by the state name and pick the FIRST one found
+            if (!$status) {
+                $status = TicketStatus::objects()
+                    ->filter(array('state' => $data['status']))
+                    ->first(); 
+            }
+
+            if ($status instanceof TicketStatus) {
+                // Apply the ID and the timestamp manually
+                $ticket->status_id = $status->getId();
+                
+                if ($status->getState() == 'closed') {
+                    $ticket->closed = SqlFunction::NOW();
+                    $ticket->isanswered = 1;
+                }
+            } else {
+                error_log("API: No status found matching: " . $data['status']);
+            }
+        }
+
+        // Final save to commit the statusId and closed timestamp
+        if (!$ticket->save()) {
+             error_log("API: Manual ticket save failed.");
         }
 
         $this->response(201, $ticket->getNumber());

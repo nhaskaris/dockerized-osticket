@@ -87,7 +87,7 @@ class UrlMatcher {
         # Add the slashes for the Perl syntax
         $this->regex = "@" . $regex . "@";
         $this->func = $func;
-        $this->args = ($args) ? $args : array();
+        $this->args = $args ? (is_array($args) ? $args : array($args)) : array();
         $this->prefix = false;
         $this->method = $method;
     }
