@@ -52,7 +52,7 @@ if(!function_exists('staffLoginPage')) { //Ajax interface can pre-declare the fu
     function staffLoginPage($msg) {
         global $ost, $cfg;
         $_SESSION['_staff']['auth']['dest'] =
-            '/' . ltrim($_SERVER['REQUEST_URI'], '/');
+            ltrim($_SERVER['REQUEST_URI'], '/');
         $_SESSION['_staff']['auth']['msg']=$msg;
 
         // Redirect here with full path for application-type plugins

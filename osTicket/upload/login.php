@@ -38,8 +38,9 @@ $suggest_pwreset = false;
 // each attempt.
 if ($_POST) {
     // Check CSRF token
-    if (!$ost->checkCSRFToken())
+    if (!$ost->checkCSRFToken()) {
         Http::response(400, __('Valid CSRF Token Required'));
+    }
 
     // Rotate the CSRF token (original cannot be reused)
     $ost->getCSRF()->rotate();
@@ -50,11 +51,14 @@ if ($_POST && isset($_POST['luser'])) {
         $errors['err'] = __('Valid username or email address is required');
     elseif (($user = UserAuthenticationBackend::process(trim($_POST['luser']),
             substr($_POST['lpasswd'], 0, 128), $errors))) {
+
         if ($user instanceof ClientCreateRequest) {
             if ($cfg && $cfg->isClientRegistrationEnabled()) {
                 // Attempt to automatically register
-                if ($user->attemptAutoRegister())
+                if ($user->attemptAutoRegister()) {
+                    session_write_close();
                     Http::redirect('tickets.php');
+                }
 
                 // Auto-registration failed. Show the user the info we have
                 $inc = 'register.inc.php';
@@ -66,8 +70,17 @@ if ($_POST && isset($_POST['luser'])) {
             }
         }
         else {
-            Http::redirect($_SESSION['_client']['auth']['dest']
-                ?: 'tickets.php');
+            // Get destination and clear it from session
+            $dest = $_SESSION['_client']['auth']['dest'] ?? '';
+            unset($_SESSION['_client']['auth']['dest']);
+            // Avoid redirect loop to login page
+            if (empty($dest) || strpos($dest, 'login.php') !== false) {
+                $dest = 'tickets.php';
+            }
+
+            // IMPORTANT: Write session data before redirect
+            session_write_close();
+            Http::redirect($dest);
         }
     } elseif(!$errors['err']) {
         $errors['err'] = sprintf('%s - %s', __('Invalid username or password'), __('Please try again!'));
@@ -82,8 +95,10 @@ elseif ($_POST && isset($_POST['lticket'])) {
 
         // If email address verification is not required, then provide
         // immediate access to the ticket!
-        if (!$cfg->isClientEmailVerificationRequired())
+        if (!$cfg->isClientEmailVerificationRequired()) {
+            session_write_close();
             Http::redirect('tickets.php');
+        }
 
         // This will succeed as it is checked in the authentication backend
         $ticket = Ticket::lookupByNumber($_POST['lticket'], $_POST['lemail']);
@@ -118,14 +133,18 @@ elseif (isset($_GET['do'])) {
 }
 elseif ($user = UserAuthenticationBackend::processSignOn($errors, false)) {
     // Users from the ticket access link
-    if ($user && $user instanceof TicketUser && $user->getTicketId())
+    if ($user && $user instanceof TicketUser && $user->getTicketId()) {
+        session_write_close();
         Http::redirect('tickets.php?id='.$user->getTicketId());
+    }
     // Users imported from an external auth backend
     elseif ($user instanceof ClientCreateRequest) {
         if ($cfg && $cfg->isClientRegistrationEnabled()) {
             // Attempt to automatically register
-            if ($user->attemptAutoRegister())
+            if ($user->attemptAutoRegister()) {
+                session_write_close();
                 Http::redirect('tickets.php');
+            }
 
             // Unable to auto-register. Fill in what we have and let the
             // user complete the info
@@ -137,8 +156,15 @@ elseif ($user = UserAuthenticationBackend::processSignOn($errors, false)) {
         }
     }
     elseif ($user instanceof AuthenticatedUser) {
-        Http::redirect($_SESSION['_client']['auth']['dest']
-                ?: 'tickets.php');
+        // Get destination and clear it from session
+        $dest = $_SESSION['_client']['auth']['dest'] ?? '';
+        unset($_SESSION['_client']['auth']['dest']);
+        // Avoid redirect loop to login page
+        if (empty($dest) || strpos($dest, 'login.php') !== false) {
+            $dest = 'tickets.php';
+        }
+        session_write_close();
+        Http::redirect($dest);
     }
 }
 

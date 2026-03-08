@@ -27,6 +27,9 @@ $content = Page::lookupByType('banner-staff');
 $thisstaff = StaffAuthenticationBackend::getUser();
 $dest = $_SESSION['_staff']['auth']['dest'] ?? null;
 $msg = $_SESSION['_staff']['auth']['msg'] ?? null;
+// Clear auth messages from session
+unset($_SESSION['_staff']['auth']['dest']);
+unset($_SESSION['_staff']['auth']['msg']);
 $msg = $msg ?: ($content ? $content->getLocalName() : __('Authentication Required'));
 $dest=($dest && (!strstr($dest,'login.php') && !strstr($dest,'ajax.php')))?$dest:'index.php';
 $show_reset = false;
@@ -48,6 +51,8 @@ if ($_POST) {
         }
     };
     $redirect = function($url) use ($json) {
+        // Write session before redirect to ensure data is saved
+        session_write_close();
         if ($json)
             Http::response(200, JsonDataEncoder::encode(array(
                 'status' => 302, 'redirect' => $url)), 'application/json');
@@ -122,12 +127,14 @@ elseif (isset($_GET['do'])) {
 elseif (!$thisstaff || !($thisstaff->getId() || $thisstaff->isValid())) {
     if (($user = StaffAuthenticationBackend::processSignOn($errors, false))
             && ($user instanceof StaffSession)) {
+        session_write_close();
         Http::redirect($dest);
     } else if (isset($_SESSION['_staff']['auth']['msg'])) {
         $msg = $_SESSION['_staff']['auth']['msg'];
     }
 }
 elseif ($thisstaff && $thisstaff->isValid()) {
+    session_write_close();
     Http::redirect($dest);
 }
 

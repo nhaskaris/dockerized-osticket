@@ -660,8 +660,8 @@ abstract class StaffAuthenticationBackend  extends AuthenticationBackend {
         $authsession['2fa'] =  $auth2fa;
         // Set TIME_BOMB to regenerate the session 10 seconds after login
         $_SESSION['TIME_BOMB'] = time() + 10;
-        // Set session token
-        $staff->setSessionToken();
+        // Set fresh session token on login (don't reuse stale/expired token)
+        $staff->setSessionToken($staff->getSessionToken());
         // Set Auth Key
         $staff->setAuthKey($authkey);
         Signal::send('auth.login.succeeded', $staff);
@@ -852,8 +852,8 @@ abstract class UserAuthenticationBackend  extends AuthenticationBackend {
 
         // Tag the user and associated ticket in the SESSION
         $this->setAuthKey($user, $bk, $authkey);
-        // Set Session Token
-        $user->setSessionToken();
+        // Set fresh session token on login (don't reuse stale/expired token)
+        $user->setSessionToken($user->getSessionToken());
         //The backend used decides the format of the auth key.
         // XXX: encrypt to hide the bk??
         $user->setAuthKey($authkey);
