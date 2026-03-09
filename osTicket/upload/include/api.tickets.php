@@ -323,13 +323,42 @@ class TicketReplyApiController extends ApiController {
         $this->response(200, json_encode($result), 'application/json');
     }
 
+    function getDepartments($format='json') {
+        $this->requireApiKey();
+        
+        // Use the ORM to get all objects
+        $depts = Dept::objects()->order_by('name');
+
+        $result = array();
+        try {
+            foreach ($depts as $D) {
+                // If you want ONLY active departments:
+                // osTicket doesn't have a simple 'isactive' column, 
+                // but we can check if it's not archived.
+                
+                $result[] = array(
+                    'id'   => $D->getId(),
+                    'name' => $D->getName(),
+                    'full_name' => $D->getFullName(), // Handles "Parent / Child"
+                    'is_public' => $D->isPublic(),
+                );
+            }
+        } catch (Exception $e) {
+            $this->exerr(500, "Database Error: " . $e->getMessage());
+        }
+
+        // If the list is still empty, let's remove the try/catch 
+        // to see if a hidden error is occurring.
+        $this->response(200, json_encode($result), 'application/json');
+    }
+
     function getRequestStructure($format, $data=null) {
         $supported = array(
-            "message", "poster", "userId", "source", "is_note", "status", "alert",
+            "message", "poster", "staffId", "source", "is_note", "status", "alert",
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
             ),
-            "topicId"
+            "topicId", "deptId"
         );
         return $supported;
     }
@@ -474,6 +503,37 @@ class TicketReplyApiController extends ApiController {
                     $changes = array('status_id' => array($oldStatusId, $newStatusId));
                     $ticket->logEvent('edited', $changes, $agent);
                 }
+            }
+        }
+
+        // 7. Handle Department Change (Transfer)
+        if (isset($data['deptId'])) {
+            $dept = is_numeric($data['deptId']) 
+                ? Dept::lookup($data['deptId']) 
+                : Dept::objects()->filter(array('name' => $data['deptId']))->first();
+
+            if ($dept instanceof Dept) {
+                $oldDeptId = $ticket->getDeptId();
+                $newDeptId = $dept->getId();
+
+                if ($oldDeptId != $newDeptId) {
+                    // 1. Update the property directly
+                    $ticket->dept_id = $newDeptId;
+
+                    // 2. Prepare the Changes array for the audit log
+                    $changes = array(
+                        'dept_id' => array($oldDeptId, $newDeptId)
+                    );
+
+                    // 3. Log the 'transferred' event (This creates the specific "Transferred to..." grey bar)
+                    $ticket->logEvent('transferred', $changes, $agent);
+                    
+                    // Note: If the ticket was assigned to an agent who doesn't have 
+                    // access to the new department, you might want to unassign it:
+                    // $ticket->staff_id = 0; 
+                }
+            } else {
+                error_log("API: Department not found: " . $data['deptId']);
             }
         }
 
