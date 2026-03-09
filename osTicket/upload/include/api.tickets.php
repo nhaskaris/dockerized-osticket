@@ -298,12 +298,38 @@ class TicketReplyApiController extends ApiController {
         exit();
     }
 
+    function getTopics($format='json') {
+        $this->requireApiKey();
+        
+        // In osTicket ost_help_topic:
+        // 'ispublic' is the column name (1 = visible, 0 = disabled/internal)
+        $topics = Topic::objects()
+            ->filter(array('ispublic' => 1)) 
+            ->order_by('topic');
+
+        $result = array();
+        try {
+            foreach ($topics as $T) {
+                $result[] = array(
+                    'id'   => $T->getId(),
+                    'name' => $T->getFullName(), // "Parent / Child"
+                    'pid'  => $T->getPid(),
+                );
+            }
+        } catch (Exception $e) {
+            $this->exerr(500, "Database Error: " . $e->getMessage());
+        }
+
+        $this->response(200, json_encode($result), 'application/json');
+    }
+
     function getRequestStructure($format, $data=null) {
         $supported = array(
             "message", "poster", "userId", "source", "is_note", "status", "alert",
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
-            )
+            ),
+            "topicId"
         );
         return $supported;
     }
@@ -326,41 +352,37 @@ class TicketReplyApiController extends ApiController {
         if (!$id)
             $this->exerr(404, __('Ticket ID required'));
 
+        // Lookup ticket by Number or ID
         $ticket = Ticket::lookupByNumber($id) ?: Ticket::lookup($id);
         if (!$ticket)
             $this->exerr(404, __('Ticket not found'));
 
         $data = $this->getRequest($format);
-        $this->validate($data, $format);
+        
+        // 1. Identify the Actor (Staff/Agent)
+        // Default to ID 1 if no staffId is provided in JSON
+        $staffId = isset($data['staffId']) ? $data['staffId'] : 1;
+        $agent = Staff::lookup($staffId);
+        
+        if (!$agent)
+            $this->exerr(400, __('Valid Staff ID required for Agent actions.'));
 
-        // 1. Prepare base vars
+        // Set global staff context for internal osTicket methods that check it
+        global $thisstaff;
+        $thisstaff = $agent;
+
+        // 2. Prepare Thread Entry Variables
         $vars = array(
-            'userId' => (isset($data['userId']) && $data['userId']) ? $data['userId'] : $ticket->getUserId(),
-            'poster' => $data['poster'] ?: 'API User',
+            'staffId' => $agent->getId(),
+            'poster'  => (string) $agent->getName(),
             'ip_address' => $_SERVER['REMOTE_ADDR'],
+            'message' => $data['message'],
         );
 
-        // Pass the message as a simple string if the array format is causing the "Array" text
-        $vars['message'] = $data['message'];
-
-        // 2. Handle User/Poster identification
-        if (isset($data['userId']) && $data['userId'] && User::lookup($data['userId'])) {
-            $vars['userId'] = $data['userId'];
-        } else {
-            $vars['userId'] = $ticket->getUserId();
-        }
-
-        if (!$vars['userId'])
-            $this->exerr(400, __('Ticket owner not found and no userId provided.'));
-
-        $vars['poster'] = $data['poster'] ?: (string) $ticket->getOwner();
-
-        // 3. Handle Attachments (Safely)
-        // We look for the 'message' field in the ticket's specific form
+        // Handle Attachments
         $tform = TicketForm::getInstance();
         if ($tform && ($messageField = $tform->getField('message'))) {
             $fileField = $messageField->getWidget()->getAttachments();
-            
             if (isset($data['attachments']) && is_array($data['attachments']) && $fileField) {
                 $vars['files'] = array();
                 foreach($data['attachments'] as $file) {
@@ -375,78 +397,98 @@ class TicketReplyApiController extends ApiController {
             }
         }
 
+        // 3. Handle Email Alerts
         $alert = isset($data['alert']) ? (bool)$data['alert'] : true;
-
         if (!$alert) {
-            // These are the keys osTicket looks for internally to suppress emails
-            $vars['no_alert'] = true; 
-            $vars['sendemail'] = false; // Extra safety for some osTicket versions
+            $vars['no_alert'] = true;
+            $vars['sendemail'] = false;
         }
 
-        // 4. Execution with Error Capture
-        try {
-            $errors = array(); // Initialize the error reference variable
-            $is_note = isset($data['is_note']) ? (bool)$data['is_note'] : false;
+        // 4. Post to Thread (Response vs Note)
+        $errors = array();
+        $is_note = isset($data['is_note']) ? (bool)$data['is_note'] : false;
 
+        try {
             if ($is_note) {
-                // postNote(array $vars, array &$errors)
-                // Note: The 'origin' is usually set inside $vars['source']
                 $vars['note'] = $data['message'];
-                $vars['source'] = 'API'; 
-                $message = $ticket->postNote($vars, $errors);
+                $entry = $ticket->postNote($vars, $errors, $agent);
             } else {
-                // postMessage(array $vars, $origin, array &$errors)
-                // postMessage actually takes 3 arguments in some versions
-                $origin = 'API';
-                $message = $ticket->postMessage($vars, $origin, $errors);
+                $vars['response'] = $data['message'];
+                // postResponse handles marking the ticket as 'Answered'
+                $entry = $ticket->postResponse($vars, $errors, $alert);
             }
             
-            if (!$message) {
-                // Use the $errors variable we just passed by reference
-                $errorMsg = (!empty($errors)) 
-                    ? (is_array($errors) ? implode(', ', $errors) : $errors)
-                    : 'Internal osTicket rejection (check filters or ticket status)';
-                
-                $this->exerr(500, "Post Failed: " . $errorMsg);
+            if (!$entry) {
+                $this->exerr(500, "Post Failed: " . implode(', ', (array)$errors));
             }
         } catch (Throwable $e) {
-            $this->exerr(500, "Fatal Error: " . $e->getMessage());
+            $this->exerr(500, "Thread Post Error: " . $e->getMessage());
         }
-        
+
+        // 5. Handle Help Topic Change (with Audit Log)
+        if (isset($data['topicId'])) {
+            $topic = is_numeric($data['topicId']) 
+                ? Topic::lookup($data['topicId']) 
+                : Topic::objects()->filter(array('topic' => $data['topicId']))->first();
+
+            if ($topic instanceof Topic) {
+                $oldTopicId = $ticket->topic_id;
+                $newTopicId = $topic->getId();
+
+                if ($oldTopicId != $newTopicId) {
+                    $ticket->topic_id = $newTopicId;
+                    
+                    // Sync Dept/SLA from Topic
+                    if ($topic->dept_id) $ticket->dept_id = $topic->dept_id;
+                    if ($topic->sla_id) $ticket->sla_id = $topic->sla_id;
+
+                    // Log the "Grey Bar" event
+                    $changes = array('topic_id' => array($oldTopicId, $newTopicId));
+                    $ticket->logEvent('edited', $changes, $agent);
+                }
+            }
+        }
+
+        // 6. Handle Status Change (with Audit Log)
         if (isset($data['status'])) {
             $status = null;
-            
-            // 1. Try to find by ID first (it's unique)
             if (is_numeric($data['status'])) {
-                $status = TicketStatus::lookup($id);
-            }
-
-            // 2. If not numeric, search by the state name and pick the FIRST one found
-            if (!$status) {
-                $status = TicketStatus::objects()
-                    ->filter(array('state' => $data['status']))
-                    ->first(); 
+                $status = TicketStatus::lookup($data['status']);
+            } else {
+                $status = TicketStatus::objects()->filter(array('state' => $data['status']))->first();
             }
 
             if ($status instanceof TicketStatus) {
-                // Apply the ID and the timestamp manually
-                $ticket->status_id = $status->getId();
-                
-                if ($status->getState() == 'closed') {
-                    $ticket->closed = SqlFunction::NOW();
-                    $ticket->isanswered = 1;
+                $oldStatusId = $ticket->status_id;
+                $newStatusId = $status->getId();
+
+                if ($oldStatusId != $newStatusId) {
+                    $ticket->status_id = $newStatusId;
+                    
+                    if ($status->getState() == 'closed') {
+                        $ticket->closed = SqlFunction::NOW();
+                        $ticket->isanswered = 1; // Mark answered if closing
+                    }
+
+                    // Log the "Grey Bar" event for status change
+                    $changes = array('status_id' => array($oldStatusId, $newStatusId));
+                    $ticket->logEvent('edited', $changes, $agent);
                 }
-            } else {
-                error_log("API: No status found matching: " . $data['status']);
             }
         }
 
-        // Final save to commit the statusId and closed timestamp
+        // 7. Final Save & Response
         if (!$ticket->save()) {
-             error_log("API: Manual ticket save failed.");
+             error_log("API: Ticket save failed.");
         }
 
-        $this->response(201, $ticket->getNumber());
+        $result = array(
+            'ticket' => $ticket->getNumber(),
+            'entry_id' => $entry->getId(),
+            'status' => $ticket->getStatus()->getName()
+        );
+
+        $this->response(201, json_encode($result));
     }
 
     function get($id, $format) {
