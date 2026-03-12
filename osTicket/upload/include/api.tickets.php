@@ -323,6 +323,33 @@ class TicketReplyApiController extends ApiController {
         $this->response(200, json_encode($result), 'application/json');
     }
 
+    function getTeams($format='json') {
+        $this->requireApiKey();
+        
+        // Fetch all teams from the ost_team table
+        // We order by 'name' for a clean list
+        $teams = Team::objects()->order_by('name');
+
+        $result = array();
+        try {
+            foreach ($teams as $T) {
+                // We check flags/status if necessary, 
+                // but osTicket teams are generally active if they exist.
+                $result[] = array(
+                    'id'      => $T->getId(),
+                    'name'    => $T->getName(),
+                    'is_enabled' => $T->isEnabled(),
+                    'members_count' => $T->getNumMembers(), // Helpful for UI
+                );
+            }
+        } catch (Exception $e) {
+            $this->exerr(500, "Database Error: " . $e->getMessage());
+        }
+
+        // Return the JSON response
+        $this->response(200, json_encode($result), 'application/json');
+    }
+
     function getDepartments($format='json') {
         $this->requireApiKey();
         
@@ -358,7 +385,7 @@ class TicketReplyApiController extends ApiController {
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
             ),
-            "topicId", "deptId"
+            "topicId", "deptId", "teamId"
         );
         return $supported;
     }
@@ -537,7 +564,39 @@ class TicketReplyApiController extends ApiController {
             }
         }
 
-        // 7. Final Save & Response
+        // 8. Handle Team Change (Assignment)
+        if (isset($data['teamId'])) {
+            $team = is_numeric($data['teamId']) 
+                ? Team::lookup($data['teamId']) 
+                : Team::objects()->filter(array('name' => $data['teamId']))->first();
+
+            if ($team instanceof Team) {
+                $oldTeamId = $ticket->getTeamId();
+                $newTeamId = $team->getId();
+
+                if ($oldTeamId != $newTeamId) {
+                    // Update the actual ticket record
+                    $ticket->team_id = $newTeamId;
+                    
+                    // Fetch the display names for the "Grey Bar"
+                    $oldTeam = $oldTeamId ? Team::lookup($oldTeamId) : null;
+                    $oldName = $oldTeam ? $oldTeam->getName() : 'None';
+                    $newName = $team->getName();
+
+                    // Create the changes array using the 'team' key
+                    $changes = array(
+                        'team' => array($oldName, $newName)
+                    );
+
+                    // LOG THE EVENT
+                    // We use 'assigned' to trigger the specific "assigned this to..." text.
+                    $ticket->logEvent('assigned', $changes, $agent);
+                }
+            } else {
+                error_log("API: Team not found: " . $data['teamId']);
+            }
+        }
+
         if (!$ticket->save()) {
              error_log("API: Ticket save failed.");
         }

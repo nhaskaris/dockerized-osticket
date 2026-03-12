@@ -14,6 +14,9 @@ $dispatcher = patterns('',
     // Departments
     url_get("^/tickets/departments(?:\.(?P<format>xml|json))?$", array('tickets.php:TicketReplyApiController', 'getDepartments')),
 
+    // Teams
+    url_get("^/tickets/teams(?:\.(?P<format>json))?$", array('tickets.php:TicketReplyApiController', 'getTeams')),
+
     // Lists
     url_get("^/lists(?:\.(?P<format>json))?$", array('lists.php:ListsApiController','getList')),
     url_post("^/lists/(?P<id>\d+)(?:\.(?P<format>json))?$", array('lists.php:ListsApiController','create')),
