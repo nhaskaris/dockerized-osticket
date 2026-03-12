@@ -385,7 +385,7 @@ class TicketReplyApiController extends ApiController {
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
             ),
-            "topicId", "deptId", "teamId"
+            "topicId", "deptId", "teamId", "source"
         );
         return $supported;
     }
@@ -594,6 +594,45 @@ class TicketReplyApiController extends ApiController {
                 }
             } else {
                 error_log("API: Team not found: " . $data['teamId']);
+            }
+        }
+
+        // 9. Handle Source Change (Strict Validation)
+        if (isset($data['source'])) {
+            // Get the official list of allowed sources from osTicket (Web, Email, Phone, API, Other)
+            $validSources = Ticket::getSources(); 
+            $requestedSource = trim($data['source']);
+            
+            $newSource = null;
+
+            // Loop through allowed sources to do a case-insensitive match
+            foreach ($validSources as $key => $value) {
+                if (strcasecmp($key, $requestedSource) === 0) {
+                    $newSource = $key; // Grab the exact system casing (e.g., 'Email')
+                    break;
+                }
+            }
+
+            // If it didn't match anything in the system, reject the request completely
+            if (!$newSource) {
+                return $this->exerr(400, sprintf(
+                    __('Invalid source: %s. Allowed sources are: %s'), 
+                    $requestedSource, 
+                    implode(', ', array_keys($validSources))
+                ));
+            }
+
+            $oldSource = $ticket->getSource();
+
+            // Only update and log if it actually changed
+            if ($oldSource != $newSource) {
+                $ticket->source = $newSource;
+
+                $changes = array(
+                    'source' => array($oldSource, $newSource)
+                );
+
+                $ticket->logEvent('edited', $changes, $agent);
             }
         }
 
