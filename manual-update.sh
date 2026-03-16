@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 # Default values
 WEB_ROOT="/var/www/html"
 BACKUP_DIR="$HOME/osticket-backup-$(date +%Y%m%d_%H%M%S)"
+FULL_BACKUP_ARCHIVE=""
 WEB_USER="www-data"
 WEB_GROUP="www-data"
 
@@ -130,6 +131,7 @@ fi
 echo ""
 echo -e "${YELLOW}This script will:${NC}"
 echo "  1. Backup existing osTicket files to: $BACKUP_DIR"
+echo "     and create a full rollback archive of: $WEB_ROOT"
 echo "  2. Remove all files from: $WEB_ROOT"
 echo "  3. Copy new osTicket files from: $SCRIPT_DIR/osTicket/upload"
 echo "  4. Restore configuration, plugins, and images"
@@ -153,10 +155,20 @@ echo ""
 # Step 1: Create backup directory
 echo -e "${YELLOW}[1/7] Creating backup directory...${NC}"
 mkdir -p "$BACKUP_DIR"
+FULL_BACKUP_ARCHIVE="$BACKUP_DIR/webroot-full-backup.tar.gz"
 echo "Backup directory created: $BACKUP_DIR"
 
 # Step 2: Backup existing files
 echo -e "${YELLOW}[2/7] Backing up existing osTicket files...${NC}"
+
+echo "  Creating full rollback backup archive..."
+if tar -czpf "$FULL_BACKUP_ARCHIVE" -C "$WEB_ROOT" .; then
+    echo "  ✓ Full web root backup created: $FULL_BACKUP_ARCHIVE"
+else
+    echo -e "${RED}Error: Failed to create full rollback backup archive${NC}"
+    echo "Aborting to avoid overwrite without recovery backup."
+    exit 1
+fi
 
 if [ -f "$WEB_ROOT/include/ost-config.php" ]; then
     cp "$WEB_ROOT/include/ost-config.php" "$BACKUP_DIR/"
@@ -301,11 +313,17 @@ echo -e "${GREEN}Update Complete!${NC}"
 echo -e "${GREEN}======================================${NC}"
 echo ""
 echo "Backup location: $BACKUP_DIR"
+echo "Full rollback backup: $FULL_BACKUP_ARCHIVE"
 echo "Web root: $WEB_ROOT"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo "  1. Visit your osTicket URL in a browser"
 echo "  2. Log in to the admin panel"
 echo "  3. Verify all functionality works correctly"
+echo ""
+echo -e "${YELLOW}Rollback (if needed):${NC}"
+echo "  1. Remove current files from web root"
+echo "  2. Restore from backup archive with:"
+echo "     tar -xzpf \"$FULL_BACKUP_ARCHIVE\" -C \"$WEB_ROOT\""
 echo ""
 echo -e "${GREEN}Update successful!${NC}"
