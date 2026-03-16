@@ -254,6 +254,8 @@
                 setTimeout(function() {
                     quill.setContents([]);
                     $textarea.val('');
+                    $textarea.removeData('quillSignatureRange');
+                    $textarea.removeData('quillCannedRange');
                 }, 0);
             });
 
@@ -271,17 +273,45 @@
                         .replace(/<div\s+class=["']ost-quill-signature["'][^>]*>[\s\S]*?<\/div>\s*$/i, '');
                 };
 
+                const removeStoredRange = function(dataKey) {
+                    const stored = $textarea.data(dataKey);
+                    if (!stored || typeof stored.index !== 'number' || typeof stored.length !== 'number') {
+                        return;
+                    }
+
+                    const maxIndex = Math.max(0, quill.getLength() - 1);
+                    const index = Math.max(0, Math.min(stored.index, maxIndex));
+                    const length = Math.max(0, Math.min(stored.length, (quill.getLength() - 1) - index));
+
+                    if (length > 0) {
+                        quill.deleteText(index, length, 'silent');
+                    }
+
+                    $textarea.removeData(dataKey);
+                };
+
                 const applySignatureToEditor = function(signatureHtml) {
-                    let body = quill.root.innerHTML;
-                    body = (body === '<p><br></p>') ? '' : body;
-                    body = stripEditorSignature(body);
+                    removeStoredRange('quillSignatureRange');
 
-                    const nextHtml = (signatureHtml && signatureHtml.trim())
-                        ? (body ? (body + '<p><br></p>') : '') + '<div class="ost-quill-signature">' + signatureHtml + '</div>'
-                        : body;
+                    if (signatureHtml && signatureHtml.trim()) {
+                        const insertAt = Math.max(0, quill.getLength() - 1);
+                        const before = quill.getLength();
+                        const hasBodyText = (quill.getText() || '').trim().length > 0;
+                        const spacer = hasBodyText ? '<p><br><br></p>' : '';
+                        const htmlToInsert = spacer + signatureHtml;
+                        quill.clipboard.dangerouslyPasteHTML(insertAt, htmlToInsert);
+                        const added = quill.getLength() - before;
 
-                    quill.clipboard.dangerouslyPasteHTML(nextHtml || '');
-                    $textarea.val(nextHtml || '');
+                        if (added > 0) {
+                            $textarea.data('quillSignatureRange', {
+                                index: insertAt,
+                                length: added
+                            });
+                        }
+                    }
+
+                    const current = quill.root.innerHTML;
+                    $textarea.val(current === '<p><br><br></p>' ? '' : current);
                 };
 
                 const initialSignature = $textarea.data('signature');
@@ -347,9 +377,17 @@
             // Only guard full editors (not no-bar optional boxes like signature editors).
             if (!$textarea.hasClass('no-bar')) {
                 $form[0].addEventListener('submit', function(e) {
-                    var html = quill.root.innerHTML;
-                    html = html.replace(/<div\s+class=["']ost-quill-signature["'][^>]*>[\s\S]*?<\/div>\s*$/i, '');
-                    var text = $('<div>').html(html).text().trim();
+                    var text = quill.getText() || '';
+                    var signatureRange = $textarea.data('quillSignatureRange');
+
+                    // Ignore managed signature block when deciding if reply body is empty
+                    if (signatureRange && typeof signatureRange.index === 'number' && typeof signatureRange.length === 'number') {
+                        var start = Math.max(0, signatureRange.index);
+                        var end = Math.max(start, start + signatureRange.length);
+                        text = text.slice(0, start) + text.slice(end);
+                    }
+
+                    text = text.trim();
                     if (!text) {
                         e.preventDefault();
                         e.stopImmediatePropagation();
@@ -495,9 +533,41 @@
                     cache: false,
                     success: function(data) {
                         if (data && data.response) {
-                            var index = $box.data('savedSelection') || 0;
-                            // Insert text at saved cursor position
+                            // Replace previously inserted canned response block
+                            // instead of stacking multiple canned responses.
+                            var previous = $box.data('quillCannedRange');
+                            var replaceIndex = null;
+                            if (previous && typeof previous.index === 'number' && typeof previous.length === 'number') {
+                                var maxIndex = Math.max(0, quill.getLength() - 1);
+                                var prevIndex = Math.max(0, Math.min(previous.index, maxIndex));
+                                var prevLen = Math.max(0, Math.min(previous.length, (quill.getLength() - 1) - prevIndex));
+                                if (prevLen > 0) {
+                                    quill.deleteText(prevIndex, prevLen, 'silent');
+                                }
+                                replaceIndex = prevIndex;
+                                $box.removeData('quillCannedRange');
+                            }
+
+                            var index = replaceIndex;
+                            if (typeof index !== 'number') {
+                                index = $box.data('savedSelection');
+                                if (typeof index !== 'number') {
+                                    var selection = quill.getSelection(true);
+                                    index = selection ? selection.index : Math.max(0, quill.getLength() - 1);
+                                }
+                            }
+                            index = Math.max(0, Math.min(index, Math.max(0, quill.getLength() - 1)));
+
+                            var before = quill.getLength();
                             quill.clipboard.dangerouslyPasteHTML(index, data.response);
+                            var inserted = quill.getLength() - before;
+                            if (inserted > 0) {
+                                $box.data('quillCannedRange', {
+                                    index: index,
+                                    length: inserted
+                                });
+                            }
+
                             $box.val(quill.root.innerHTML);
                         }
                     }
