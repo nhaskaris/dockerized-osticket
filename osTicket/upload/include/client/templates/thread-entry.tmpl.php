@@ -12,19 +12,33 @@ if ($entry->staff && $cfg->hideStaffName()) {
 // 1. Identify System Canned Replies
 $isSystemCannedReply = (strpos($entry->poster, 'SYSTEM') !== false && strpos($entry->poster, 'Canned Reply') !== false);
 
+// Identify Mail Delivery / mailer-daemon type senders
+$isMailDelivery = (
+    stripos((string)$entry->poster, 'mail delivery') !== false ||
+    stripos((string)$entry->poster, 'mailer-daemon') !== false ||
+    stripos((string)$entry->poster, 'postmaster') !== false ||
+    stripos((string)$name, 'mail delivery') !== false
+);
+
 $avatar = '';
 if ($isSystemCannedReply) {
-    // 2. Set System Name and the specific Gravatar you requested
+    // System Canned Reply — specific Gravatar
     $name = 'SYSTEM';
     $avatar = '<img class="avatar" alt="Avatar" src="//www.gravatar.com/avatar/b1891d1dea3aeb76b4896e451623ac39?s=80&amp;d=mm" width="64" height="64">';
+} elseif ($isMailDelivery) {
+    // Distinctive mail-bounce / mailer-daemon icon
+    $avatar = '<span class="avatar" style="display:inline-flex;align-items:center;justify-content:center;'
+            . 'width:64px;height:64px;border-radius:50%;background:#c0392b;flex-shrink:0;">'
+            . '<i class="icon-envelope-alt" style="font-size:26px;color:#fff;line-height:1;"></i>'
+            . '</span>';
 } else {
-    // 3. Normal Avatar Logic for Users/Staff
+    // Normal Avatar Logic for Users/Staff
     if ($cfg->isAvatarsEnabled() && $user) {
         $avatar = $user->getAvatar();
     }
 }
 
-// 4. Fallback if no avatar exists (Standard osTicket sprite)
+// Fallback if no avatar exists (Standard osTicket sprite)
 if (!$avatar) {
     $avatar = '<img class="avatar" src="images/avatar-sprite-ateam.png" alt="Avatar" width="64" height="64">';
 }
