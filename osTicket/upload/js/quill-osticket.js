@@ -257,12 +257,99 @@
                 }, 0);
             });
 
+            // Signature support: preview + append into editor content
+            const signatureField = $textarea.data('signature-field');
+            if (signatureField) {
+                const $signatureBox = $('<div class="selected-signature"><div class="inner"></div></div>');
+                const $signatureInner = $signatureBox.find('.inner');
+                $container.after($signatureBox);
+
+                const stripEditorSignature = function(html) {
+                    if (!html) return '';
+                    return html
+                        .replace(/<p><br><\/p>\s*<div\s+class=["']ost-quill-signature["'][^>]*>[\s\S]*?<\/div>\s*$/i, '')
+                        .replace(/<div\s+class=["']ost-quill-signature["'][^>]*>[\s\S]*?<\/div>\s*$/i, '');
+                };
+
+                const applySignatureToEditor = function(signatureHtml) {
+                    let body = quill.root.innerHTML;
+                    body = (body === '<p><br></p>') ? '' : body;
+                    body = stripEditorSignature(body);
+
+                    const nextHtml = (signatureHtml && signatureHtml.trim())
+                        ? (body ? (body + '<p><br></p>') : '') + '<div class="ost-quill-signature">' + signatureHtml + '</div>'
+                        : body;
+
+                    quill.clipboard.dangerouslyPasteHTML(nextHtml || '');
+                    $textarea.val(nextHtml || '');
+                };
+
+                const initialSignature = $textarea.data('signature');
+                if (initialSignature) {
+                    $signatureInner.html(initialSignature);
+                    $signatureBox.show();
+                    applySignatureToEditor(initialSignature);
+                } else {
+                    $signatureBox.hide();
+                }
+
+                const updateSignature = function() {
+                    const selected = $form.find(':input:checked[name=' + signatureField + ']').val();
+                    const deptId = $textarea.data('dept-id');
+                    const deptField = $textarea.data('dept-field');
+                    const posterId = $textarea.data('poster-id');
+                    let url = 'ajax.php/content/signature/';
+
+                    if (!selected || selected === 'none') {
+                        $signatureInner.empty();
+                        $signatureBox.hide();
+                        applySignatureToEditor('');
+                        return;
+                    }
+
+                    if (selected === 'dept' && deptId) {
+                        url += 'dept/' + deptId;
+                    } else if (selected === 'dept' && deptField) {
+                        const deptValue = $form.find(':input[name=' + deptField + ']').val();
+                        if (deptValue) {
+                            url += 'dept/' + deptValue;
+                        } else {
+                            $signatureInner.empty();
+                            $signatureBox.hide();
+                            applySignatureToEditor('');
+                            return;
+                        }
+                    } else if (selected === 'theirs' && posterId) {
+                        url += 'agent/' + posterId;
+                    } else {
+                        url += selected;
+                    }
+
+                    $.get(url, function(html) {
+                        $signatureInner.html(html);
+                        $signatureBox.show();
+                        applySignatureToEditor(html);
+                    }).fail(function() {
+                        $signatureInner.empty();
+                        $signatureBox.hide();
+                        applySignatureToEditor('');
+                    });
+                };
+
+                $form.on('change', ':input[name=' + signatureField + ']', updateSignature);
+                if ($textarea.data('dept-field')) {
+                    $form.on('change', ':input[name=' + $textarea.data('dept-field') + ']', updateSignature);
+                }
+            }
+
             // Empty-body guard — capture phase fires before scp.js's bubble-phase
             // .submit() handler, so we can stop it before the overlay appears.
             // Only guard full editors (not no-bar optional boxes like signature editors).
             if (!$textarea.hasClass('no-bar')) {
                 $form[0].addEventListener('submit', function(e) {
-                    var text = quill.getText().trim();
+                    var html = quill.root.innerHTML;
+                    html = html.replace(/<div\s+class=["']ost-quill-signature["'][^>]*>[\s\S]*?<\/div>\s*$/i, '');
+                    var text = $('<div>').html(html).text().trim();
                     if (!text) {
                         e.preventDefault();
                         e.stopImmediatePropagation();
