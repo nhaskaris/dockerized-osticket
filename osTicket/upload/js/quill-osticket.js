@@ -374,8 +374,13 @@
 
             // Empty-body guard — capture phase fires before scp.js's bubble-phase
             // .submit() handler, so we can stop it before the overlay appears.
-            // Only guard full editors (not no-bar optional boxes like signature editors).
-            if (!$textarea.hasClass('no-bar')) {
+            // Skip for: no-bar editors, ticket-open form (response + note are optional there),
+            // and any textarea whose placeholder explicitly says it's optional.
+            const isOptionalEditor = $textarea.hasClass('no-bar')
+                || ($form.attr('action') || '').indexOf('a=open') !== -1
+                || ($textarea.attr('placeholder') || '').toLowerCase().indexOf('optional') !== -1;
+
+            if (!isOptionalEditor) {
                 $form[0].addEventListener('submit', function(e) {
                     var text = quill.getText() || '';
                     var signatureRange = $textarea.data('quillSignatureRange');
