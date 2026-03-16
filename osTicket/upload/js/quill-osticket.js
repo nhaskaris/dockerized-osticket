@@ -257,6 +257,30 @@
                 }, 0);
             });
 
+            // Empty-body guard — capture phase fires before scp.js's bubble-phase
+            // .submit() handler, so we can stop it before the overlay appears.
+            // Only guard full editors (not no-bar optional boxes like signature editors).
+            if (!$textarea.hasClass('no-bar')) {
+                $form[0].addEventListener('submit', function(e) {
+                    var text = quill.getText().trim();
+                    if (!text) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+
+                        var $c = $textarea.next('.quill-container');
+                        $c.css({'outline': '2px solid #c00', 'border-radius': '4px'});
+                        setTimeout(function() { $c.css({'outline': '', 'border-radius': ''}); }, 2500);
+                        $c.find('.ql-editor').focus();
+
+                        if (!$c.next('.quill-empty-error').length) {
+                            var $err = $('<p class="quill-empty-error" style="color:#c00;margin:4px 0 0;font-size:0.9em;">A response is required before submitting.</p>');
+                            $c.after($err);
+                            setTimeout(function() { $err.remove(); }, 2500);
+                        }
+                    }
+                }, true /* capture — runs before jQuery bubble handlers */);
+            }
+
             // Store instance
             quillInstances.set($textarea[0], quill);
 
@@ -395,13 +419,13 @@
         });
     });
 
-    // Handle form submissions - Final sync check
+    // Handle form submissions - Final sync: write Quill HTML back to textarea
     $(document).on('submit', 'form', function() {
         $('.richtext', this).each(function() {
             const quill = quillInstances.get(this);
-            if (quill) {
-                $(this).val(quill.root.innerHTML);
-            }
+            if (!quill) return;
+            const html = quill.root.innerHTML;
+            $(this).val(html === '<p><br></p>' ? '' : html);
         });
     });
 
