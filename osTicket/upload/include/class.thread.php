@@ -2986,13 +2986,19 @@ class ResponseThreadEntry extends ThreadEntry {
     }
 
     static function add($vars, &$errors=array()) {
+        global $cfg;
+
+        $min_reply_chars = ($cfg && method_exists($cfg, 'getMinStaffReplyChars'))
+            ? $cfg->getMinStaffReplyChars()
+            : 10;
 
         if (!$vars || !is_array($vars) || !$vars['threadId'])
             $errors['err'] = __('Missing or invalid data');
         elseif (!$vars['response'])
             $errors['response'] = __('Response content is required');
-        elseif (mb_strlen(trim(Format::striptags($vars['response']))) < 10)
-            $errors['response'] = __('Response must be at least 10 characters');
+        elseif ($min_reply_chars
+                && mb_strlen(trim(Format::striptags($vars['response']))) < $min_reply_chars)
+            $errors['response'] = sprintf(__('Response must be at least %d characters'), $min_reply_chars);
 
         if ($errors) return false;
 

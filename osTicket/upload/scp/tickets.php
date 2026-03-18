@@ -174,10 +174,11 @@ if($_POST && !$errors):
                 $vars['files'] = $response_form->getField('attachments')->getFiles();
                 $vars['response'] = ThreadEntryBody::clean($vars['response']);
                 $response_text = trim(Format::striptags($vars['response']));
+                $min_reply_chars = $cfg->getMinStaffReplyChars();
                 if(!$vars['response'])
                     $errors['response']=__('Response required');
-                elseif (mb_strlen($response_text) < 10)
-                    $errors['response']=__('Response must be at least 10 characters');
+                elseif ($min_reply_chars && mb_strlen($response_text) < $min_reply_chars)
+                    $errors['response']=sprintf(__('Response must be at least %d characters'), $min_reply_chars);
 
                 if ($cfg->isTicketLockEnabled()) {
                     if (!$lock) {

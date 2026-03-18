@@ -259,6 +259,7 @@ class OsticketConfig extends Config {
         'agent_avatar' => 'gravatar.mm',
         'ticket_lock' => 2, // Lock on activity
         'max_open_tickets' => 0,
+        'min_staff_reply_chars' => 10,
         'files_req_auth' => 1,
         'force_https' => '',
         'allow_external_images' => 0,
@@ -790,6 +791,10 @@ class OsticketConfig extends Config {
     function getMaxOpenTickets() {
          return $this->get('max_open_tickets');
     }
+
+        function getMinStaffReplyChars() {
+            return max(0, (int) $this->get('min_staff_reply_chars', 10));
+        }
 
     function getMaxFileSize() {
         return $this->get('max_file_size');
@@ -1442,6 +1447,7 @@ class OsticketConfig extends Config {
         $f['default_ticket_status_id'] = array('type'=>'int', 'required'=>1, 'error'=>__('Selection required'));
         $f['default_priority_id']=array('type'=>'int',   'required'=>1, 'error'=>__('Selection required'));
         $f['max_open_tickets']=array('type'=>'int',   'required'=>1, 'error'=>__('Enter valid numeric value'));
+        $f['min_staff_reply_chars']=array('type'=>'int',   'required'=>1, 'error'=>__('Enter valid numeric value'));
 
 
         if($vars['enable_captcha']) {
@@ -1464,6 +1470,11 @@ class OsticketConfig extends Config {
             $errors['default_ticket_queue'] = __("Select a default ticket queue");
         elseif (!CustomQueue::lookup($vars['default_ticket_queue']))
             $errors['default_ticket_queue'] = __("Select a default ticket queue");
+
+        if (isset($vars['min_staff_reply_chars'])
+                && (int) $vars['min_staff_reply_chars'] < 0) {
+            $errors['min_staff_reply_chars'] = __('Value must be 0 or greater');
+        }
 
         $this->updateAutoresponderSettings($vars, $errors);
         $this->updateAlertsSettings($vars, $errors);
@@ -1489,6 +1500,7 @@ class OsticketConfig extends Config {
             'default_ticket_status_id'=>$vars['default_ticket_status_id'],
             'default_sla_id'=>$vars['default_sla_id'],
             'max_open_tickets'=>$vars['max_open_tickets'],
+            'min_staff_reply_chars'=>$vars['min_staff_reply_chars'],
             'enable_captcha'=>isset($vars['enable_captcha'])?1:0,
             'auto_claim_tickets'=>isset($vars['auto_claim_tickets'])?1:0,
             'auto_refer_closed' => isset($vars['auto_refer_closed']) ? 1 : 0,

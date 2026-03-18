@@ -197,6 +197,14 @@ if(!($maxfileuploads=ini_get('max_file_uploads')))
             </td>
         </tr>
         <tr>
+            <td><?php echo __('Minimum Staff Reply Length');?>:</td>
+            <td>
+                <input type="text" name="min_staff_reply_chars" size=4 value="<?php echo $config['min_staff_reply_chars'] ?? 10; ?>">
+                <?php echo __('characters (0 disables minimum length check)'); ?>
+                <span class="error"><?php echo $errors['min_staff_reply_chars']; ?></span>
+            </td>
+        </tr>
+        <tr>
             <td><?php echo __('Human Verification');?>:</td>
             <td>
                 <input type="checkbox" name="enable_captcha" <?php echo $config['enable_captcha']?'checked="checked"':''; ?>>
