@@ -2991,6 +2991,8 @@ class ResponseThreadEntry extends ThreadEntry {
             $errors['err'] = __('Missing or invalid data');
         elseif (!$vars['response'])
             $errors['response'] = __('Response content is required');
+        elseif (mb_strlen(trim(Format::striptags($vars['response']))) < 10)
+            $errors['response'] = __('Response must be at least 10 characters');
 
         if ($errors) return false;
 
