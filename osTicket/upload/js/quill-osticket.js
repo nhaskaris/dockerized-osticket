@@ -374,13 +374,19 @@
 
             // Empty-body guard — capture phase fires before scp.js's bubble-phase
             // .submit() handler, so we can stop it before the overlay appears.
-            // Skip for: no-bar editors, ticket-open form (response + note are optional there),
-            // and any textarea whose placeholder explicitly says it's optional.
+            // Only enforce this on ticket/task response forms; other richtext fields
+            // (for example, agent internal notes) are allowed to be empty.
+            const formAction = ($form.attr('action') || '').toLowerCase();
+            const fieldName = ($textarea.attr('name') || '').toLowerCase();
+            const isTicketOrTaskForm = /(?:^|\/)\s*(tickets|tasks)\.php(?:\?|$)/.test(formAction)
+                || formAction.indexOf('tickets.php') !== -1
+                || formAction.indexOf('tasks.php') !== -1;
+            const isReplyField = /^(response|note|message)$/.test(fieldName);
             const isOptionalEditor = $textarea.hasClass('no-bar')
-                || ($form.attr('action') || '').indexOf('a=open') !== -1
+                || formAction.indexOf('a=open') !== -1
                 || ($textarea.attr('placeholder') || '').toLowerCase().indexOf('optional') !== -1;
 
-            if (!isOptionalEditor) {
+            if (isTicketOrTaskForm && isReplyField && !isOptionalEditor) {
                 $form[0].addEventListener('submit', function(e) {
                     var text = quill.getText() || '';
                     var signatureRange = $textarea.data('quillSignatureRange');

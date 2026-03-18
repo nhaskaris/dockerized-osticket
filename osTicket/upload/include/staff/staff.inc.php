@@ -232,7 +232,7 @@ if ($bks=Staff2FABackend::allRegistered() && $current = $staff->get2FABackend())
         <?php echo __("Be liberal, they're internal");?>
     </div>
 
-    <textarea name="notes" class="richtext">
+    <textarea name="notes" class="richtext" placeholder="Optional internal notes">
       <?php echo Format::viewableImages($staff->notes); ?>
     </textarea>
   </div>
