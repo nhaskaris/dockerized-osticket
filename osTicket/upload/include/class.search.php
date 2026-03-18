@@ -970,7 +970,10 @@ class SavedQueue extends CustomQueue {
             // only get counts for regular tickets (not children tickets) unless
             // queue is a saved search
             if ($queue->isAQueue() || $queue->isASubQueue()) {
-                $reg = Q::any(array('thread__object_type' => 'T'));
+                $reg = Q::any(array(
+                    'ticket_pid__isnull' => true,
+                    'flags__hasbit' => Ticket::FLAG_LINKED,
+                ));
                 $Q->constraints[] = $reg;
             }
 
