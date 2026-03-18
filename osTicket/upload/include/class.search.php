@@ -965,6 +965,7 @@ class SavedQueue extends CustomQueue {
         $query = $agent->applyVisibility($query, true);
         // Aggregate constraints
         foreach ($queues as $queue) {
+            $queue = static::lookup($queue->getId()) ?: $queue;
             $Q = $queue->getBasicQuery();
 
             // only get counts for regular tickets (not children tickets) unless
