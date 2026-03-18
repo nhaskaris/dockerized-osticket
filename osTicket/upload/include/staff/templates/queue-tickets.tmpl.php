@@ -84,7 +84,8 @@ if (!$sorted) {
 // Apply pagination
 
 $page = (isset($_GET['p']) && is_numeric($_GET['p']))?$_GET['p']:1;
-$pageNav = new Pagenate(PHP_INT_MAX, $page, PAGE_LIMIT);
+$total = $tickets->count();
+$pageNav = new Pagenate($total, $page, PAGE_LIMIT);
 $tickets = $pageNav->paginateSimple($tickets);
 
 if (isset($tickets->extra['tables'])) {
@@ -116,7 +117,7 @@ if ($Q->constraints) {
     }
 }
 
-$count = $queue->getCount($thisstaff);
+$count = $total;
 $pageNav->setTotal($count);
 $pageNav->setURL('tickets.php', $args);
 ?>
