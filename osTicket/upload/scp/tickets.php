@@ -410,6 +410,136 @@ if($_POST && !$errors):
     }elseif($_POST['a']) {
 
         switch($_POST['a']) {
+            case 'generate_test_tickets':
+                if (!$thisstaff || !$thisstaff->isAdmin()
+                        || !$thisstaff->hasPerm(Ticket::PERM_CREATE, false)) {
+                    $errors['err'] = __('Permission denied. Administrator access is required.');
+                    break;
+                }
+
+                $count = (int) ($_POST['generate_count'] ?? 0);
+                if ($count < 100 || $count > 200) {
+                    $errors['err'] = __('Please select a ticket count between 100 and 200.');
+                    break;
+                }
+
+                $deptId = 0;
+                $defaultDeptId = (int) ($thisstaff->getDeptId() ?: $cfg->getDefaultDeptId());
+                if ($depts = $thisstaff->getDepartmentNames(true)) {
+                    foreach ($depts as $id => $name) {
+                        if (!($role = $thisstaff->getRole($id))
+                                || !$role->hasPerm(Ticket::PERM_CREATE))
+                            continue;
+                        if ((int) $id === $defaultDeptId) {
+                            $deptId = (int) $id;
+                            break;
+                        }
+                        if (!$deptId)
+                            $deptId = (int) $id;
+                    }
+                }
+
+                $topicId = 0;
+                $defaultTopicId = (int) $cfg->getDefaultTopicId();
+                if ($topics = $thisstaff->getTopicNames(false, false)) {
+                    if ($defaultTopicId && isset($topics[$defaultTopicId]))
+                        $topicId = $defaultTopicId;
+                    else {
+                        $topicIds = array_keys($topics);
+                        $topicId = (int) reset($topicIds);
+                    }
+                }
+
+                if (!$deptId || !$topicId) {
+                    $errors['err'] = __('Unable to determine default department or help topic for test ticket generation.');
+                    break;
+                }
+
+                $created = 0;
+                $failed = 0;
+                $firstFailureErrors = array();
+                $batch = date('YmdHis');
+                $seedUser = null;
+                try {
+                    $seedUser = User::objects()->order_by('id')->one();
+                } catch (Exception $e) {
+                    $seedUser = null;
+                }
+
+                if (!$seedUser) {
+                    $seedUser = User::fromVars(array(
+                        'name' => 'Load Test User',
+                        'email' => sprintf('loadtest+%s@example.invalid', $batch),
+                    ), true);
+                }
+
+                if (!$seedUser) {
+                    $errors['err'] = __('Unable to prepare a test user for ticket generation. Please create at least one end user first.');
+                    break;
+                }
+
+                $baseVars = array(
+                    'uid' => $seedUser->getId(),
+                    'deptId' => $deptId,
+                    'topicId' => $topicId,
+                    'source' => 'Phone',
+                );
+
+                for ($i = 1; $i <= $count; $i++) {
+                    $vars = $baseVars;
+                    $vars['name'] = sprintf('Test User %03d', $i);
+                    $vars['email'] = sprintf('test-ticket+%s-%03d@example.invalid', $batch, $i);
+                    $vars['subject'] = sprintf('Auto Test Ticket %s #%03d', $batch, $i);
+                    $vars['message'] = sprintf(
+                        'This is an auto-generated test ticket (%d of %d) created at %s for system testing.',
+                        $i,
+                        $count,
+                        date('c')
+                    );
+
+                    $ticketErrors = array();
+                    if (Ticket::open($vars, $ticketErrors))
+                        $created++;
+                    else {
+                        $failed++;
+                        if (!$firstFailureErrors)
+                            $firstFailureErrors = $ticketErrors;
+                    }
+                }
+
+                if (!$created) {
+                    $detail = '';
+                    if ($firstFailureErrors) {
+                        $parts = array();
+                        foreach ($firstFailureErrors as $v) {
+                            if (is_string($v) && trim($v))
+                                $parts[] = trim($v);
+                            if (count($parts) >= 2)
+                                break;
+                        }
+                        if ($parts)
+                            $detail = ' ' . implode(' ', $parts);
+                    }
+                    $errors['err'] = __('Unable to generate test tickets. Please review your ticket form requirements.') . $detail;
+                    break;
+                }
+
+                if ($failed) {
+                    $msg = sprintf(
+                        __('Created %1$d of %2$d test tickets. %3$d failed due to validation requirements.'),
+                        $created,
+                        $count,
+                        $failed
+                    );
+                } else {
+                    $msg = sprintf(__('Created %d test tickets successfully.'), $created);
+                }
+
+                $redirect = 'tickets.php';
+                if (!empty($_REQUEST['queue'])) {
+                    $redirect .= '?queue=' . urlencode($_REQUEST['queue']);
+                }
+                break;
             case 'open':
                 $ticket=null;
                 if (!$thisstaff ||
