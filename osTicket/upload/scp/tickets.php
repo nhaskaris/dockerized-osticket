@@ -155,6 +155,16 @@ $note_form = new SimpleForm(array(
         'configuration' => array('extensions'=>'')))
 ));
 
+$enableTestTicketGeneration = in_array(
+    strtolower(trim((string) getenv('OST_ENABLE_TEST_TICKET_GENERATION'))),
+    array('1', 'true', 'yes', 'on'),
+    true
+);
+$canGenerateTestTickets = ($enableTestTicketGeneration
+    && $thisstaff
+    && $thisstaff->isAdmin()
+    && $thisstaff->hasPerm(Ticket::PERM_CREATE, false));
+
 //At this stage we know the access status. we can process the post.
 if($_POST && !$errors):
 
@@ -412,8 +422,7 @@ if($_POST && !$errors):
 
         switch($_POST['a']) {
             case 'generate_test_tickets':
-                if (!$thisstaff || !$thisstaff->isAdmin()
-                        || !$thisstaff->hasPerm(Ticket::PERM_CREATE, false)) {
+                if (!$canGenerateTestTickets) {
                     $errors['err'] = __('Permission denied. Administrator access is required.');
                     break;
                 }
@@ -421,6 +430,18 @@ if($_POST && !$errors):
                 $count = (int) ($_POST['generate_count'] ?? 0);
                 if ($count < 100 || $count > 200) {
                     $errors['err'] = __('Please select a ticket count between 100 and 200.');
+                    break;
+                }
+
+                $confirmText = trim((string) ($_POST['confirm_generate_text'] ?? ''));
+                if ($confirmText !== 'GENERATE') {
+                    $errors['err'] = __('Confirmation text mismatch. Type GENERATE to proceed.');
+                    break;
+                }
+
+                $confirmCount = (int) ($_POST['confirm_generate_count'] ?? 0);
+                if ($confirmCount !== $count) {
+                    $errors['err'] = __('Confirmation count mismatch. Please retry and confirm the same ticket count.');
                     break;
                 }
 

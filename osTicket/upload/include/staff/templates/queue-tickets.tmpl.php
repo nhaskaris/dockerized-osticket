@@ -299,13 +299,15 @@ foreach ($tickets as $T) {
         id="queue-export" class="no-pjax export"
             ><?php echo __('Export'); ?></a>
         <i class="help-tip icon-question-sign" href="#export"></i>
-<?php if ($thisstaff->isAdmin() && $thisstaff->hasPerm(Ticket::PERM_CREATE, false)) { ?>
+<?php if (!empty($canGenerateTestTickets)) { ?>
         <form action="tickets.php" method="POST" style="display:inline-block; margin-left:10px;">
             <?php csrf_token(); ?>
             <input type="hidden" name="a" value="generate_test_tickets" />
             <input type="hidden" name="queue" value="<?php echo Format::htmlchars($_REQUEST['queue'] ?? ''); ?>" />
             <input type="hidden" name="generate_count" value="100" />
-            <button type="submit" class="button" onclick="var c=window.prompt('<?php echo Format::htmlchars(__('How many test tickets should be generated? Enter a number from 100 to 200.'), true); ?>','100'); if (c===null) return false; c=parseInt(c,10); if (isNaN(c) || c<100 || c>200) { window.alert('<?php echo Format::htmlchars(__('Please enter a valid number between 100 and 200.'), true); ?>'); return false; } this.form.generate_count.value=c; return true;"><?php echo __('Generate Test Tickets'); ?></button>
+            <input type="hidden" name="confirm_generate_text" value="" />
+            <input type="hidden" name="confirm_generate_count" value="" />
+            <button type="submit" class="button" onclick="var c=window.prompt('<?php echo Format::htmlchars(__('How many test tickets should be generated? Enter a number from 100 to 200.'), true); ?>','100'); if (c===null) return false; c=parseInt(c,10); if (isNaN(c) || c<100 || c>200) { window.alert('<?php echo Format::htmlchars(__('Please enter a valid number between 100 and 200.'), true); ?>'); return false; } var t=window.prompt('<?php echo Format::htmlchars(__('Type GENERATE to confirm this operation.'), true); ?>',''); if (t===null) return false; t=t.replace(/^\s+|\s+$/g,''); if (t!=='GENERATE') { window.alert('<?php echo Format::htmlchars(__('Confirmation text did not match.'), true); ?>'); return false; } var v=window.prompt('<?php echo Format::htmlchars(__('Re-enter the same ticket count to continue.'), true); ?>', String(c)); if (v===null) return false; v=parseInt(v,10); if (isNaN(v) || v!==c) { window.alert('<?php echo Format::htmlchars(__('Ticket count confirmation did not match.'), true); ?>'); return false; } this.form.generate_count.value=c; this.form.confirm_generate_text.value=t; this.form.confirm_generate_count.value=v; return true;"><?php echo __('Generate Test Tickets'); ?></button>
         </form>
 <?php } ?>
     </div>

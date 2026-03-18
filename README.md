@@ -71,6 +71,7 @@ The script will:
 **Configuration & Customization**
 
 - To change PHP settings, edit `php.ini` before building the image.
+- Test ticket generation in the staff queue UI is disabled by default. To enable it, set `OST_ENABLE_TEST_TICKET_GENERATION=true` on the app container environment.
 
 **Development Notes**
 
