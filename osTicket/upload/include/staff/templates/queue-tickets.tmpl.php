@@ -116,13 +116,8 @@ if ($Q->constraints) {
     }
 }
 
-if (($Q->extra && isset($Q->extra['tables'])) || !$Q->constraints || $empty) {
-    $skipCount = true;
-    $count = '-';
-}
-
-$count = $count ?? $queue->getCount($thisstaff);
-$pageNav->setTotal($count, true);
+$count = $queue->getCount($thisstaff);
+$pageNav->setTotal($count);
 $pageNav->setURL('tickets.php', $args);
 ?>
 
@@ -294,7 +289,7 @@ foreach ($tickets as $T) {
 </table>
 
 <?php
-    if ($count > 0 || $skipCount) { //if we actually had any tickets returned.
+    if ($count > 0) { //if we actually had any tickets returned.
 ?>  <div>
       <span class="faded pull-right"><?php echo $pageNav->showing(); ?></span>
 <?php

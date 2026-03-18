@@ -1093,7 +1093,7 @@ class SavedSearch extends SavedQueue {
     }
 
     function getCount($agent, $cached=true) {
-        return 500;
+        return parent::getCount($agent, $cached);
     }
 }
 
