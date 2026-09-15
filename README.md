@@ -71,6 +71,41 @@ The script will:
 - `plugins/`: Optional plugins bundled with this repo (example: `recaptchav2/`).
 - `languages/`
 
+**PHAR Plugin Customization**
+
+The `phar_customization/` scripts are used to extract and rebuild the bundled
+`plugins/auth-ldap.phar` plugin:
+
+1. **Extract the PHAR from the repository root:**
+
+```bash
+php phar_customization/extract.php \
+	--phar plugins/auth-ldap.phar \
+	--output-dir phar_customization/auth_ldap
+```
+
+The plugin files are extracted to `phar_customization/auth_ldap/`. Edit the
+extracted files as needed.
+
+2. **Rebuild the PHAR from the customization directory:**
+
+```bash
+php -d phar.readonly=0 phar_customization/repack.php \
+	--input-dir phar_customization/auth_ldap \
+	--output phar_customization/auth-ldap.phar
+```
+
+3. **Back up the original and replace the plugin:**
+
+```bash
+cp plugins/auth-ldap.phar plugins/auth-ldap.phar.bak
+mv phar_customization/auth-ldap.phar plugins/auth-ldap.phar
+```
+
+The PHP CLI must have the Phar extension
+enabled. The `phar.readonly=0` option is required when creating the rebuilt
+archive. Restart or rebuild the osTicket container after replacing the plugin.
+
 **Configuration & Customization**
 
 - To change PHP settings, edit `php.ini` before building the image.
