@@ -28,21 +28,24 @@ docker compose logs -f
 docker compose down
 ```
 
-### Manual Installation (Non-Docker)
+### Manual Update (Non-Docker)
 
-For traditional LAMP/LEMP server deployments:
+For upgrading an existing osTicket installation on a traditional LAMP/LEMP server:
 
 1. **Make the script executable:**
 
 ```bash
-chmod +x manual-install.sh
+chmod +x manual-update.sh
 ```
 
-2. **Run the installation script as root:**
+2. **Run the update script as root:**
 
 ```bash
-sudo ./manual-install.sh
+sudo ./manual-update.sh
 ```
+
+The script prompts for the web root directory. Press Enter to use the default
+`/var/www/html`, or enter the path to an existing osTicket web root.
 
 The script will:
 - Backup your existing osTicket files (config, plugins, languages, attachments)
