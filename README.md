@@ -73,33 +73,33 @@ The script will:
 
 **PHAR Plugin Customization**
 
-The `phar_customization/` scripts are used to extract and rebuild the bundled
-`plugins/auth-ldap.phar` plugin:
+The `phar_customization/` scripts are used to extract and rebuild a PHAR
+plugin, using `plugins/example.phar` as the default example:
 
 1. **Extract the PHAR from the repository root:**
 
 ```bash
 php phar_customization/extract.php \
-	--phar plugins/auth-ldap.phar \
-	--output-dir phar_customization/auth_ldap
+	--phar plugins/example.phar \
+	--output-dir phar_customization/example
 ```
 
-The plugin files are extracted to `phar_customization/auth_ldap/`. Edit the
+The plugin files are extracted to `phar_customization/example/`. Edit the
 extracted files as needed.
 
 2. **Rebuild the PHAR from the customization directory:**
 
 ```bash
 php -d phar.readonly=0 phar_customization/repack.php \
-	--input-dir phar_customization/auth_ldap \
-	--output phar_customization/auth-ldap.phar
+	--input-dir phar_customization/example \
+	--output phar_customization/example.phar
 ```
 
 3. **Back up the original and replace the plugin:**
 
 ```bash
-cp plugins/auth-ldap.phar plugins/auth-ldap.phar.bak
-mv phar_customization/auth-ldap.phar plugins/auth-ldap.phar
+cp plugins/example.phar plugins/example.phar.bak
+mv phar_customization/example.phar plugins/example.phar
 ```
 
 The PHP CLI must have the Phar extension
